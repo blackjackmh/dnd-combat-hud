@@ -264,7 +264,7 @@
 const ALL_CHARACTERS = [
   {
     id: "luffi", name: "Луффі", sub: "Паладин 4", initBonus: "DEX +0",
-    hp: 38, maxHp: 38, ac: 17, initiative: 0, spellDC: 13,
+    hp: 28, maxHp: 28, ac: 17, initiative: 0, spellDC: 13,
     profBonus: 2,
     abilities: {STR:14,DEX:11,CON:11,INT:12,WIS:9,CHA:16},
     saveProficiencies: ["WIS","CHA"],
@@ -275,16 +275,16 @@ const ALL_CHARACTERS = [
       "Persuasion":     {stat:"CHA", type:"prof"}
     },
     attacks: [
-      {name:"Longsword +1", bonus:"+5", dmg:"1d8+3", type:"Рубляча", note:"Versatile 1d10+3 · Weapon Mastery"},
+      {name:"Longsword +1", bonus:"+5", dmg:"1d8+3", type:"Рубляча", note:"Versatile 1d10+3 · Mastery: Sap — влучання → ціль має Disadv. на наст. d20"},
       {name:"Breath Weapon", bonus:"КС 13 DEX", dmg:"1d10", type:"Блискавка", note:"конус 15фт або лінія 30×5фт · 2/LR"},
       {name:"True Strike", bonus:"+5", dmg:"1d8+3", type:"Рад./зброї", note:"кантріп · замість STR/DEX"},
-      {name:"Javelin", bonus:"+4", dmg:"1d6+2", type:"Колюча", note:"Метальна 30/120фт · Weapon Mastery"}
+      {name:"Javelin", bonus:"+4", dmg:"1d6+2", type:"Колюча", note:"Метальна 30/120фт · Mastery: Slow — влучання → ціль −10фт швидк."}
     ],
-    // Spellcasting: Paladin prepares spells. Limit = 5 (Oath + Cause Fear don't count)
+    // Spellcasting: Paladin prepares spells. Limit = 5 (Oath + Guiding Bolt don't count)
     spellcasting: {
       type: "prepared",
       preparedLimit: 5,
-      alwaysPreparedNote: "Oath, Cause Fear та Divine Smite не входять в ліміт"
+      alwaysPreparedNote: "Oath, Guiding Bolt та Divine Smite не входять в ліміт"
     },
     spells: [
       // Cantrips (Magic Initiate — always)
@@ -294,19 +294,18 @@ const ALL_CHARACTERS = [
       {name:"Bane",         nameUa:"Прокляття",            lvl:1, tag:"oath", isConc:true},
       {name:"Hunter's Mark",nameUa:"Мітка Мисливця",       lvl:1, tag:"oath", isConc:true},
       // Always prepared (class feature / feat)
-      {name:"Cause Fear",   nameUa:"Навіяти Страх",        lvl:1, tag:"magic-init"},
+      {name:"Guiding Bolt", nameUa:"Промінь-Провідник",    lvl:1, tag:"magic-init"},
       {name:"Divine Smite", nameUa:"Божественний Удар",    lvl:1, tag:"always"},
       // Paladin spell list lvl 1 — preparable
       {name:"Bless",             nameUa:"Благословення",      lvl:1, tag:"prep", defaultPrepared:true},
       {name:"Command",           nameUa:"Наказ",              lvl:1, tag:"prep", defaultPrepared:false},
-      {name:"Compelled Duel",    nameUa:"Вимушений Дуель",    lvl:1, tag:"prep", defaultPrepared:false, isConc:true},
+      {name:"Compelled Duel",    nameUa:"Вимушений Дуель",    lvl:1, tag:"prep", defaultPrepared:true, isConc:true},
       {name:"Cure Wounds",       nameUa:"Зцілення Ран",       lvl:1, tag:"prep", defaultPrepared:true},
       {name:"Detect Evil and Good",nameUa:"Виявити Зло та Добро",lvl:1, tag:"prep", defaultPrepared:false, isConc:true},
       {name:"Detect Magic",      nameUa:"Виявити Магію",      lvl:1, tag:"prep", defaultPrepared:false, isConc:true},
       {name:"Detect Poison and Disease",nameUa:"Виявити Отруту та Хворобу",lvl:1, tag:"prep", defaultPrepared:false, isConc:true},
       {name:"Divine Favor",      nameUa:"Божественна Прихильність",lvl:1, tag:"prep", defaultPrepared:false, isConc:true},
-      {name:"Divine Smite",      nameUa:"Божественний Удар",  lvl:1, tag:"prep", defaultPrepared:false},
-      {name:"Heroism",           nameUa:"Героїзм",            lvl:1, tag:"prep", defaultPrepared:true, isConc:true},
+      {name:"Heroism",           nameUa:"Героїзм",            lvl:1, tag:"prep", defaultPrepared:false, isConc:true},
       {name:"Protection from Evil and Good",nameUa:"Захист від Зла та Добра",lvl:1, tag:"prep", defaultPrepared:false},
       {name:"Purify Food and Drink",nameUa:"Очистити Їжу та Питво",lvl:1, tag:"prep", defaultPrepared:false},
       {name:"Searing Smite",     nameUa:"Палаючий Удар",      lvl:1, tag:"prep", defaultPrepared:true, isConc:true},
@@ -315,8 +314,9 @@ const ALL_CHARACTERS = [
     ],
     resources: [
       {id:"smite",label:"Free Smite"},
-      {id:"cf",label:"Cause Fear (безк.)"}
+      {id:"gb",label:"Guiding Bolt (безк.)"}
     ],
+    cdOptions: ["Divine Sense — Celestials/Fiends/Undead в 60фт, 10хв (бонусна дія)", "Vow of Enmity — Advantage на атаки проти цілі в 30фт, 1хв (при Attack action)"],
     shortRestRestores: { resources:[], counters:[{id:"cd", amount:1}] },
     longRestRestores: "all",
     counters: [
@@ -324,52 +324,6 @@ const ALL_CHARACTERS = [
       {id:"cd",    label:"Channel Div.",  max:2, step:1},
       {id:"br",    label:"Breath Wpn",    max:2, step:1},
       {id:"loh",   label:"Lay on Hands",  max:20, step:1}
-    ]
-  },
-  {
-    id: "shtrebis", name: "Штребіс", sub: "Варлок 4", initBonus: "DEX +2, Alert +2 = +4",
-    hp: 27, maxHp: 27, ac: 14, initiative: 0, spellDC: 14,
-    profBonus: 2,
-    abilities: {STR:8,DEX:15,CON:13,INT:10,WIS:12,CHA:19},
-    saveProficiencies: ["WIS","CHA"],
-    skillProficiencies: {
-      "Intimidation":   {stat:"CHA", type:"prof"},
-      "Deception":      {stat:"CHA", type:"prof"}
-    },
-    attacks: [
-      {name:"Eldritch Blast", bonus:"+6", dmg:"1d10+4", type:"Force", note:"120фт · кантріп"},
-      {name:"Pact Blade", bonus:"+6", dmg:"1d8+4", type:"на вибір", note:"CHA · Necr/Psych/Rad"}
-    ],
-    spellcasting: {
-      type: "known", // warlock — knows spells, no prepare limit
-    },
-    spells: [
-      // Cantrips
-      {name:"Eldritch Blast", nameUa:"Містичний Удар", lvl:0, tag:"always"},
-      {name:"Prestidigitation", nameUa:"Маніпуляція", lvl:0, tag:"always"},
-      {name:"Disguise Self", nameUa:"Самомаскування", lvl:0, tag:"always"},
-      // Patron — always
-      {name:"Calm Emotions", nameUa:"Заспокоїти Емоції", lvl:2, tag:"patron", isConc:true},
-      {name:"Faerie Fire", nameUa:"Феєрична Пожежа", lvl:1, tag:"patron", isConc:true},
-      {name:"Misty Step", nameUa:"Туманний Крок", lvl:2, tag:"patron"},
-      {name:"Phantasmal Force", nameUa:"Фантомна Сила", lvl:2, tag:"patron", isConc:true},
-      {name:"Sleep", nameUa:"Сон", lvl:1, tag:"patron"},
-      // Known
-      {name:"Arms of Hadar", nameUa:"Руки Хадара", lvl:1, tag:"known"},
-      {name:"Charm Person", nameUa:"Зачарувати Людину", lvl:1, tag:"known"},
-      {name:"Crown of Madness", nameUa:"Корона Безумства", lvl:2, tag:"known", isConc:true},
-      {name:"Hellish Rebuke", nameUa:"Пекельна Відплата", lvl:1, tag:"known"},
-      {name:"Hex", nameUa:"Гекс / Прокляття", lvl:1, tag:"known", isConc:true},
-    ],
-    resources: [
-      {id:"mc",label:"Magical Cunning"}
-    ],
-    shortRestRestores: { resources:[], counters:[{id:"pact", amount:2}] },
-    longRestRestores: "all",
-    counters: [
-      {id:"pact",  label:"Slot 2рів (Pact)", max:2, step:1},
-      {id:"misty", label:"Misty Step",        max:4, step:1},
-      {id:"fury",  label:"Fury/Small",         max:2, step:1}
     ]
   },
   {
@@ -405,12 +359,14 @@ const ALL_CHARACTERS = [
       {name:"Ray of Frost",  nameUa:"Промінь Холоду", lvl:0, tag:"always"},
       {name:"Shocking Grasp",nameUa:"Удар Струмом",   lvl:0, tag:"always"},
       // Spellbook — preparable (rituals can also be cast without preparing)
+      {name:"Burning Hands",     nameUa:"Палаючі Руки",          lvl:1, tag:"prep", defaultPrepared:false},
       {name:"Detect Magic",      nameUa:"Виявити Магію",         lvl:1, tag:"prep", defaultPrepared:false, isRitual:true, isConc:true},
       {name:"Disguise Self",     nameUa:"Самомаскування",        lvl:1, tag:"prep", defaultPrepared:true},
       {name:"Feather Fall",      nameUa:"Пір'яне Падіння",       lvl:1, tag:"prep", defaultPrepared:false},
       {name:"Identify",          nameUa:"Ідентифікація",         lvl:1, tag:"prep", defaultPrepared:false, isRitual:true},
       {name:"Mage Armor",        nameUa:"Магічна Броня",         lvl:1, tag:"prep", defaultPrepared:true},
       {name:"Magic Missile",     nameUa:"Магічна Стріла",        lvl:1, tag:"prep", defaultPrepared:true},
+      {name:"Shield",            nameUa:"Щит",                   lvl:1, tag:"prep", defaultPrepared:false},
       {name:"Sleep",             nameUa:"Сон",                   lvl:1, tag:"prep", defaultPrepared:false},
       {name:"Thunderwave",       nameUa:"Громова Хвиля",         lvl:1, tag:"prep", defaultPrepared:true},
       {name:"Witch Bolt",        nameUa:"Відьомський Болт",      lvl:1, tag:"prep", defaultPrepared:true, isConc:true},
@@ -431,9 +387,9 @@ const ALL_CHARACTERS = [
   },
   {
     id: "adolf", name: "Адольф", sub: "Бард 4 (CoS)", initBonus: "DEX +3",
-    hp: 29, maxHp: 29, ac: 16, initiative: 0, spellDC: 15,
+    hp: 29, maxHp: 29, ac: 15, initiative: 0, spellDC: 14,
     profBonus: 2,
-    abilities: {STR:8,DEX:16,CON:14,INT:10,WIS:10,CHA:20},
+    abilities: {STR:8,DEX:16,CON:14,INT:10,WIS:10,CHA:18},
     saveProficiencies: ["DEX","CHA"],
     skillProficiencies: {
       "Deception":      {stat:"CHA", type:"expert"},
@@ -448,7 +404,7 @@ const ALL_CHARACTERS = [
       {name:"Rapier + Slash. Flourish", bonus:"+5", dmg:"1d8+1d6+5", type:"Колюча", note:"Bardic Insp: +1d6 цілі + та ж 1d6 ін. істоті в 5фт"},
       {name:"Rapier + Mob. Flourish", bonus:"+5", dmg:"1d8+1d6+5", type:"Колюча", note:"Bardic Insp: +1d6 + відкинути 5d6фт + рух до неї"},
       {name:"Dagger", bonus:"+5", dmg:"1d4+3", type:"Колюча", note:"Фінесс · Метальна 20/60фт"},
-      {name:"Vicious Mockery", bonus:"КС 15 WIS", dmg:"1d6", type:"Психічна", note:"60фт · кантріп · Disadv. на наст. атаку цілі"}
+      {name:"Vicious Mockery", bonus:"КС 14 WIS", dmg:"1d6", type:"Психічна", note:"60фт · кантріп · Disadv. на наст. атаку цілі"}
     ],
     spellcasting: {
       type: "known",
@@ -478,7 +434,47 @@ const ALL_CHARACTERS = [
     counters: [
       {id:"slot1", label:"Slot 1 (1рів)",  max:4, step:1},
       {id:"slot2", label:"Slot 2 (2рів)",  max:3, step:1},
-      {id:"bi",    label:"Bardic Insp.",    max:5, step:1}
+      {id:"bi",    label:"Bardic Insp.",    max:4, step:1}
+    ]
+  },
+  {
+    id: "shtrebis", name: "☠ Штребіс", sub: "Варлок 4 — загинув", initBonus: "DEX +2",
+    dead: true,
+    hp: 0, maxHp: 27, ac: 14, initiative: 0, spellDC: 14,
+    profBonus: 2,
+    abilities: {STR:8,DEX:15,CON:13,INT:10,WIS:12,CHA:19},
+    saveProficiencies: ["WIS","CHA"],
+    skillProficiencies: {
+      "Intimidation":   {stat:"CHA", type:"prof"},
+      "Deception":      {stat:"CHA", type:"prof"}
+    },
+    attacks: [
+      {name:"Eldritch Blast", bonus:"+6", dmg:"1d10+4", type:"Force", note:"120фт · кантріп"},
+      {name:"Pact Blade", bonus:"+6", dmg:"1d8+4", type:"на вибір", note:"CHA · Necr/Psych/Rad"}
+    ],
+    spellcasting: { type: "known" },
+    spells: [
+      {name:"Eldritch Blast", nameUa:"Містичний Удар", lvl:0, tag:"always"},
+      {name:"Prestidigitation", nameUa:"Маніпуляція", lvl:0, tag:"always"},
+      {name:"Disguise Self", nameUa:"Самомаскування", lvl:0, tag:"always"},
+      {name:"Calm Emotions", nameUa:"Заспокоїти Емоції", lvl:2, tag:"patron", isConc:true},
+      {name:"Faerie Fire", nameUa:"Феєрична Пожежа", lvl:1, tag:"patron", isConc:true},
+      {name:"Misty Step", nameUa:"Туманний Крок", lvl:2, tag:"patron"},
+      {name:"Phantasmal Force", nameUa:"Фантомна Сила", lvl:2, tag:"patron", isConc:true},
+      {name:"Sleep", nameUa:"Сон", lvl:1, tag:"patron"},
+      {name:"Arms of Hadar", nameUa:"Руки Хадара", lvl:1, tag:"known"},
+      {name:"Charm Person", nameUa:"Зачарувати Людину", lvl:1, tag:"known"},
+      {name:"Crown of Madness", nameUa:"Корона Безумства", lvl:2, tag:"known", isConc:true},
+      {name:"Hellish Rebuke", nameUa:"Пекельна Відплата", lvl:1, tag:"known"},
+      {name:"Hex", nameUa:"Гекс / Прокляття", lvl:1, tag:"known", isConc:true},
+    ],
+    resources: [{id:"mc",label:"Magical Cunning"}],
+    shortRestRestores: { resources:[], counters:[] },
+    longRestRestores: "all",
+    counters: [
+      {id:"pact",  label:"Slot 2рів (Pact)", max:2, step:1},
+      {id:"misty", label:"Misty Step",        max:4, step:1},
+      {id:"fury",  label:"Fury/Small",         max:2, step:1}
     ]
   }
 ];
@@ -526,7 +522,14 @@ let selected = new Set();
 
 function buildSelectionScreen() {
   const grid = document.getElementById('char-grid');
-  grid.innerHTML = ALL_CHARACTERS.map(c => `
+  grid.innerHTML = ALL_CHARACTERS.map(c => {
+    if(c.dead) return `
+    <div class="char-card" id="card-${c.id}" style="opacity:.4;cursor:not-allowed;pointer-events:none;">
+      <div class="cn" style="color:var(--red)">${c.name}</div>
+      <div class="cs">${c.sub}</div>
+      <div class="cstats"><span style="color:var(--red)">Загинув</span></div>
+    </div>`;
+    return `
     <div class="char-card" id="card-${c.id}" onclick="toggleSelect('${c.id}')">
       <div class="cn">${c.name}</div>
       <div class="cs">${c.sub}</div>
@@ -536,7 +539,8 @@ function buildSelectionScreen() {
         <span>КС ${c.spellDC}</span>
         <span>Init ${c.initBonus}</span>
       </div>
-    </div>`).join('');
+    </div>`;
+  }).join('');
 }
 
 function toggleSelect(id) {
@@ -818,6 +822,7 @@ function spellUrl(name) {
     "Feather Fall":                    ["feather-fall",                     "xphb"],
     "Friends":                         ["friends",                          "xphb"],
     "Gust of Wind":                    ["gust-of-wind",                     "xphb"],
+    "Guiding Bolt":                    ["guiding-bolt",                     "xphb"],
     "Healing Word":                    ["healing-word",                     "xphb"],
     "Hellish Rebuke":                  ["hellish-rebuke",                   "xphb"],
     "Heroism":                         ["heroism",                          "xphb"],
@@ -908,8 +913,9 @@ function renderCol4Spells(c) {
         const safeId = 'prep_'+c.id+'_'+sp.name.replace(/[^a-z0-9]/gi,'_');
         const isDisabled = (atLimit && !S.prepared[key]) ? 'disabled' : '';
         const rowOpacity = isDisabled ? 'opacity:.4' : 'opacity:1';
+        const safeSpellName = sp.name.replace(/'/g, "\\'");
         return `<div class="spell-item" style="${rowOpacity}">
-          <input type="checkbox" id="${safeId}" ${checked} ${isDisabled} onchange="togglePrepared('${c.id}','${sp.name}')"/>
+          <input type="checkbox" id="${safeId}" ${checked} ${isDisabled} onchange="togglePrepared('${c.id}','${safeSpellName}')"/>
           <span class="spell-name">${link}${ritBadge}${concBadge}</span>
           <span class="spell-meta">(${sp.nameUa})</span>
         </div>`;
@@ -955,12 +961,18 @@ function renderCol3AttacksResources(c) {
     return `<span class="cres-tag ${val<=0?'exhausted':''}" onclick="tickCounter('${c.id}','${cr.id}',${cr.max},${cr.step})" title="${val<=0?'Клікни щоб відновити':'Клікни щоб витратити'}">${cr.label} (${val}/${cr.max})</span>`;
   }).join('');
 
+  const cdHtml = (c.cdOptions && c.cdOptions.length) ? `
+    <div class="divider"></div>
+    <div class="blabel">Channel Divinity — опції</div>
+    <div style="font-size:10px;color:var(--text2);line-height:1.8">${c.cdOptions.map(o=>`· ${o}`).join('<br>')}</div>` : '';
+
   return `<div>
     <div class="blabel">Атаки та кантріпи</div>
     ${atkRows}
     <div class="divider"></div>
     <div class="blabel">Ресурси</div>
     <div class="res-wrap">${hi}${resTags}${ctrTags}</div>
+    ${cdHtml}
   </div>`;
 }
 
