@@ -266,17 +266,19 @@ const ALL_CHARACTERS = [
     id: "luffi", name: "Луффі", sub: "Паладин 4", initBonus: "DEX +0",
     hp: 38, maxHp: 38, ac: 17, initiative: 0, spellDC: 13,
     profBonus: 2,
-    abilities: {STR:17,DEX:10,CON:13,INT:8,WIS:12,CHA:17},
+    abilities: {STR:14,DEX:11,CON:11,INT:12,WIS:9,CHA:16},
     saveProficiencies: ["WIS","CHA"],
     skillProficiencies: {
       "Athletics":      {stat:"STR", type:"prof"},
-      "Religion":       {stat:"INT", type:"prof"}
+      "Religion":       {stat:"INT", type:"prof"},
+      "Insight":        {stat:"WIS", type:"prof"},
+      "Persuasion":     {stat:"CHA", type:"prof"}
     },
     attacks: [
-      {name:"Longsword +1", bonus:"+6", dmg:"1d8+4", type:"Рубляча", note:"Versatile 1d10+4 · Weapon Mastery"},
+      {name:"Longsword +1", bonus:"+5", dmg:"1d8+3", type:"Рубляча", note:"Versatile 1d10+3 · Weapon Mastery"},
       {name:"Breath Weapon", bonus:"КС 13 DEX", dmg:"1d10", type:"Блискавка", note:"конус 15фт або лінія 30×5фт · 2/LR"},
       {name:"True Strike", bonus:"+5", dmg:"1d8+3", type:"Рад./зброї", note:"кантріп · замість STR/DEX"},
-      {name:"Javelin", bonus:"+5", dmg:"1d6+3", type:"Колюча", note:"Метальна 30/120фт · Weapon Mastery"}
+      {name:"Javelin", bonus:"+4", dmg:"1d6+2", type:"Колюча", note:"Метальна 30/120фт · Weapon Mastery"}
     ],
     // Spellcasting: Paladin prepares spells. Limit = 5 (Oath + Cause Fear don't count)
     spellcasting: {
