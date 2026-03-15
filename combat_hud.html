@@ -2,9 +2,7 @@
 <html lang="uk">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Combat HUD — Dragon of Icespire Peak</title>
 <style>
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -245,52 +243,6 @@
     /* Very narrow phones: hero row fully single column */
     .hero-row { grid-template-columns: 1fr; }
   }
-
-  /* ── iOS / SAFARI FIXES ───────────────────────────────────────── */
-  /* Prevent iOS zoom on input focus (font-size must be ≥16px) */
-  input[type=number], input[type=text], select, textarea {
-    font-size: 16px !important;
-    -webkit-appearance: none;
-    border-radius: 6px;
-  }
-  /* Remove inner shadow on iOS inputs */
-  input, select, textarea {
-    -webkit-appearance: none;
-    -moz-appearance: none;
-    appearance: none;
-  }
-  /* Fix number input spinners on iOS */
-  input[type=number] { -moz-appearance: textfield; }
-  input[type=number]::-webkit-inner-spin-button,
-  input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
-  /* Fix select arrow on iOS */
-  select {
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%23999'/%3E%3C/svg%3E");
-    background-repeat: no-repeat;
-    background-position: right 8px center;
-    padding-right: 24px !important;
-  }
-  /* Tap highlight */
-  button, .char-card, .ctag, .rtag, .hitag, .cres-tag, .pm-btn {
-    -webkit-tap-highlight-color: rgba(0,0,0,0.08);
-    touch-action: manipulation;
-  }
-  /* Safe area padding for notch/home indicator */
-  body {
-    padding-bottom: env(safe-area-inset-bottom);
-    padding-left: env(safe-area-inset-left);
-    padding-right: env(safe-area-inset-right);
-  }
-  /* contenteditable on iOS */
-  .stat-block-field {
-    -webkit-user-select: text;
-    user-select: text;
-  }
-  /* Fix init-table number input on iPhone */
-  .init-table input[type=number] { font-size: 14px !important; width: 58px; }
-  /* Prevent double-tap zoom on buttons */
-  .pm-btn, .btn-row button, .start-btn, .tog-btn { touch-action: manipulation; }
-
 </style>
 </head>
 <body>
@@ -572,11 +524,8 @@ let selected = new Set();
 
 function buildSelectionScreen() {
   const grid = document.getElementById('char-grid');
-  if (!grid) return;
   grid.innerHTML = ALL_CHARACTERS.map(c => `
-    <div class="char-card" id="card-${c.id}" role="button" tabindex="0"
-      onclick="toggleSelect('${c.id}')"
-      ontouchend="event.preventDefault();toggleSelect('${c.id}')">
+    <div class="char-card" id="card-${c.id}" onclick="toggleSelect('${c.id}')">
       <div class="cn">${c.name}</div>
       <div class="cs">${c.sub}</div>
       <div class="cstats">
@@ -601,7 +550,7 @@ let S = { round:1, currentIdx:0, showForm:false, log:[], used:{}, counters:{}, p
 function startCombat() {
   S.combatants = ALL_CHARACTERS
     .filter(c => selected.has(c.id))
-    .map(c => Object.assign({}, JSON.parse(JSON.stringify(c)), {type:'hero', conditions:[]}));
+    .map(c => ({...JSON.parse(JSON.stringify(c)), type:'hero', conditions:[]}));
   // Init default prepared spells
   S.combatants.forEach(c => {
     if (c.spellcasting && c.spellcasting.type === 'prepared') {
@@ -720,7 +669,7 @@ function addMonster() {
 }
 
 function resetCombat() {
-  if(!window.confirm('Скинути бій?')) return;
+  if(!confirm('Скинути бій?')) return;
   S.round=1; S.currentIdx=0; S.used={}; S.counters={};
   S.log=["Бій скинуто."];
   S.combatants.forEach(x=>{ x.hp=x.maxHp; x.conditions=[]; });
@@ -763,7 +712,7 @@ function doLongRest() {
 }
 
 function backToSelect() {
-  if(!window.confirm('Повернутись до вибору персонажів?')) return;
+  if(!confirm('Повернутись до вибору персонажів?')) return;
   document.getElementById('hud-screen').style.display='none';
   document.getElementById('select-screen').style.display='flex';
   selected.clear();
@@ -902,7 +851,7 @@ function spellUrl(name) {
   if (entry) return `https://5e.tools/spells/${entry[0]}-${entry[1]}.html`;
   // fallback: auto-slug + phb
   const slug = name.toLowerCase()
-    .replace(/[\u0027\u2019]/g,"")
+    .replace(/['\u2019]/g,"")
     .replace(/[^a-z0-9]+/g,"-")
     .replace(/-+/g,"-")
     .replace(/^-|-$/g,"");
@@ -1136,18 +1085,7 @@ function render() {
 }
 
 // ── INIT ──────────────────────────────────────────────────────────────────────
-function init() {
-  try {
-    buildSelectionScreen();
-  } catch(e) {
-    document.body.innerHTML = '<div style="padding:20px;font-family:sans-serif;color:red"><b>Помилка:</b> ' + e.message + '<br><pre>' + e.stack + '</pre></div>';
-  }
-}
-if (document.readyState === 'loading') {
-  document.addEventListener('DOMContentLoaded', init);
-} else {
-  init();
-}
+buildSelectionScreen();
 </script>
 </body>
 </html>
