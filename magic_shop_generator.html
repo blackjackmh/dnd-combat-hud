@@ -1,0 +1,558 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>5e Magic Shop Generator</title>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Crimson+Text:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --gold:#c9a84c;--gold-light:#f0d07a;--gold-dim:#7a5f2a;
+    --bg-dark:#0d0b08;--bg-card:#1e1810;--bg-card2:#261f14;
+    --border:#3a2e1a;--border-gold:#5a4520;
+    --text:#e8dcc4;--text-muted:#9a8a6a;--text-dim:#5a4f3a;
+    --mundane:#aaaaaa;--common:#b0c4de;--uncommon:#7ec47e;
+    --rare:#7eb8e8;--very-rare:#c47ee8;--legendary:#e8a050;
+    --radius:6px;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{background:var(--bg-dark);color:var(--text);font-family:'Crimson Text',Georgia,serif;font-size:16px;min-height:100vh;}
+  .page-bg{background:radial-gradient(ellipse at 20% 0%,rgba(120,80,20,.15) 0%,transparent 60%),radial-gradient(ellipse at 80% 100%,rgba(80,40,10,.12) 0%,transparent 60%);min-height:100vh;padding:0 0 4rem;}
+  header{border-bottom:1px solid var(--border-gold);padding:2rem 2rem 1.5rem;text-align:center;position:relative;}
+  header::before{content:'';position:absolute;bottom:0;left:50%;transform:translateX(-50%);width:60%;height:1px;background:linear-gradient(to right,transparent,var(--gold),transparent);}
+  h1{font-family:'Cinzel',serif;font-size:2rem;font-weight:700;color:var(--gold-light);letter-spacing:.08em;text-shadow:0 0 30px rgba(200,160,60,.3);}
+  .subtitle{font-style:italic;color:var(--text-muted);margin-top:.25rem;font-size:1rem;}
+  .main-layout{display:grid;grid-template-columns:315px 1fr;gap:0;max-width:1200px;margin:0 auto;padding:1.5rem;align-items:start;}
+  @media(max-width:800px){.main-layout{grid-template-columns:1fr;}}
+  .sidebar{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);padding:1.25rem;position:sticky;top:1rem;}
+  .sec-title{font-family:'Cinzel',serif;font-size:.72rem;letter-spacing:.15em;color:var(--gold);text-transform:uppercase;border-bottom:1px solid var(--border);padding-bottom:.5rem;margin-bottom:.85rem;margin-top:1.2rem;}
+  .sec-title:first-child{margin-top:0;}
+  .preset-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:1rem;}
+  .preset-btn{background:var(--bg-card2);border:1px solid var(--border);color:var(--text-muted);padding:.4rem .5rem;border-radius:var(--radius);cursor:pointer;font-family:'Crimson Text',serif;font-size:.85rem;transition:all .15s;text-align:center;}
+  .preset-btn:hover{border-color:var(--gold-dim);color:var(--gold-light);background:rgba(120,80,20,.2);}
+  .rarity-block{margin-bottom:.8rem;}
+  .rarity-row{display:flex;align-items:center;gap:8px;margin-bottom:4px;}
+  .rlabel{width:78px;font-size:.85rem;flex-shrink:0;}
+  .rlabel.mundane{color:var(--mundane);}
+  .rlabel.common{color:var(--common);}
+  .rlabel.uncommon{color:var(--uncommon);}
+  .rlabel.rare{color:var(--rare);}
+  .rlabel.very-rare{color:var(--very-rare);}
+  .rlabel.legendary{color:var(--legendary);}
+  .dice-input{flex:1;background:var(--bg-dark);border:1px solid var(--border);color:var(--text);padding:.3rem .6rem;border-radius:4px;font-family:'Crimson Text',serif;font-size:.9rem;min-width:0;}
+  .dice-input:focus{outline:none;border-color:var(--gold-dim);}
+  .dice-input.invalid{border-color:#c45050;}
+  .dice-hints{display:flex;gap:3px;flex-wrap:wrap;padding-left:86px;}
+  .hbtn{background:var(--bg-dark);border:1px solid var(--border);color:var(--text-dim);padding:.15rem .38rem;border-radius:3px;cursor:pointer;font-size:.7rem;font-family:'Crimson Text',serif;transition:all .1s;}
+  .hbtn:hover{border-color:var(--gold-dim);color:var(--text-muted);}
+  .potions-row{display:flex;align-items:center;gap:10px;margin:.75rem 0;font-size:.9rem;color:var(--text-muted);}
+  .potions-row input{accent-color:var(--gold-dim);width:14px;height:14px;}
+  .markup-row{display:flex;align-items:center;gap:10px;margin-bottom:.75rem;font-size:.85rem;color:var(--text-muted);}
+  .markup-row input[type=range]{flex:1;accent-color:var(--gold-dim);}
+  .mval{width:44px;text-align:right;font-family:'Cinzel',serif;font-size:.8rem;color:var(--gold);}
+  .tog{font-size:.8rem;color:var(--gold-dim);cursor:pointer;text-decoration:underline;display:inline-block;margin-bottom:.5rem;}
+  .tog:hover{color:var(--gold);}
+  .adv{display:none;}
+  .adv.open{display:block;}
+  .check-grid{display:grid;grid-template-columns:1fr 1fr;gap:4px 12px;margin-bottom:.75rem;}
+  .ci{display:flex;align-items:center;gap:6px;cursor:pointer;font-size:.85rem;color:var(--text-muted);user-select:none;}
+  .ci input{accent-color:var(--gold-dim);width:13px;height:13px;}
+  .gen-btn{width:100%;background:linear-gradient(to bottom,rgba(120,80,20,.5),rgba(80,50,10,.5));border:1px solid var(--gold-dim);color:var(--gold-light);padding:.75rem 1rem;border-radius:var(--radius);font-family:'Cinzel',serif;font-size:.9rem;letter-spacing:.1em;cursor:pointer;margin-top:1.25rem;transition:all .15s;}
+  .gen-btn:hover{background:linear-gradient(to bottom,rgba(160,110,30,.6),rgba(110,70,15,.6));border-color:var(--gold);color:#fff8e0;}
+  .gen-btn:active{transform:scale(.98);}
+  .results-panel{padding-left:1.5rem;}
+  @media(max-width:800px){.results-panel{padding-left:0;padding-top:1.5rem;}}
+  .rh{display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem;}
+  .rt{font-family:'Cinzel',serif;font-size:1.1rem;color:var(--gold);letter-spacing:.05em;}
+  .rc{font-size:.85rem;color:var(--text-dim);font-style:italic;}
+  .empty{background:var(--bg-card);border:1px dashed var(--border);border-radius:var(--radius);padding:3rem 2rem;text-align:center;color:var(--text-dim);font-style:italic;font-size:1.05rem;}
+  .rsec{margin-bottom:1.5rem;}
+  .rsec-hdr{display:flex;align-items:center;gap:10px;margin-bottom:.75rem;padding-bottom:.5rem;border-bottom:1px solid var(--border);}
+  .rbadge{font-family:'Cinzel',serif;font-size:.68rem;letter-spacing:.12em;padding:.2rem .6rem;border-radius:20px;border:1px solid currentColor;}
+  .bm{color:var(--mundane);border-color:#555;}
+  .bc{color:var(--common);border-color:#5a7a8a;}
+  .bu{color:var(--uncommon);border-color:#4a8a4a;}
+  .br{color:var(--rare);border-color:#4a6a9a;}
+  .bvr{color:var(--very-rare);border-color:#7a4a9a;}
+  .bl{color:var(--legendary);border-color:#9a6a2a;}
+  .ig{display:grid;grid-template-columns:repeat(auto-fill,minmax(215px,1fr));gap:10px;}
+  .icard{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);padding:.75rem 1rem;transition:border-color .15s;}
+  .icard:hover{border-color:var(--border-gold);}
+  .iname{font-size:.95rem;font-weight:600;color:var(--text);margin-bottom:.15rem;line-height:1.3;}
+  .iname a{color:inherit;text-decoration:none;border-bottom:1px dotted var(--gold-dim);transition:color .1s;}
+  .iname a:hover{color:var(--gold-light);border-bottom-color:var(--gold);}
+  .ispell{font-size:.85rem;color:var(--text-muted);margin-bottom:.2rem;line-height:1.3;}
+  .ispell a{color:var(--uncommon);text-decoration:none;border-bottom:1px dotted rgba(126,196,126,.4);transition:color .1s;}
+  .ispell a:hover{color:#a0e0a0;}
+  .itype{font-size:.78rem;color:var(--text-dim);font-style:italic;margin-bottom:.35rem;}
+  .iprice{font-family:'Cinzel',serif;font-size:.85rem;color:var(--gold);font-weight:600;}
+  .iatt{font-size:.73rem;color:#7a6a4a;font-style:italic;margin-top:.2rem;}
+</style>
+</head>
+<body>
+<div class="page-bg">
+<header>
+  <h1>⚔ Magic Shop Generator</h1>
+  <div class="subtitle">D&D 5th Edition — type a number or dice expression like <em>2d4-2</em></div>
+</header>
+<div class="main-layout">
+  <div class="sidebar">
+    <div class="sec-title">Presets</div>
+    <div class="preset-grid">
+      <button class="preset-btn" onclick="applyPreset('village')">Village</button>
+      <button class="preset-btn" onclick="applyPreset('smalltown')">Small Town</button>
+      <button class="preset-btn" onclick="applyPreset('largetown')">Large Town</button>
+      <button class="preset-btn" onclick="applyPreset('smallcity')">Small City</button>
+      <button class="preset-btn" onclick="applyPreset('largecity')">Large City</button>
+      <button class="preset-btn" onclick="applyPreset('general')">General Store</button>
+    </div>
+    <div class="sec-title">Item Counts</div>
+    <div id="rarity-inputs"></div>
+    <div class="potions-row">
+      <input type="checkbox" id="addPotions">
+      <label for="addPotions">Add Potions of Healing</label>
+    </div>
+    <div class="sec-title">Markup</div>
+    <div class="markup-row">
+      <span>Price</span>
+      <input type="range" id="markup" min="-50" max="300" value="0" step="5">
+      <span class="mval" id="markupVal">0%</span>
+    </div>
+    <span class="tog" onclick="toggleAdv()">▸ Advanced Filters</span>
+    <div class="adv" id="advSec">
+      <div class="sec-title">Magic Types</div>
+      <div class="check-grid" id="magicTypes"></div>
+      <div class="sec-title">Categories</div>
+      <div class="check-grid" id="categories"></div>
+    </div>
+    <button class="gen-btn" onclick="generateShop()">⚔ Generate Shop</button>
+  </div>
+
+  <div class="results-panel">
+    <div class="rh">
+      <div class="rt">Shop Inventory</div>
+      <div class="rc" id="rc"></div>
+    </div>
+    <div id="results"><div class="empty">Set your quantities and click Generate Shop to stock the shelves...</div></div>
+  </div>
+</div>
+</div>
+<script>
+const RARITIES=['mundane','common','uncommon','rare','very-rare','legendary'];
+const RLABELS={mundane:'Mundane',common:'Common',uncommon:'Uncommon',rare:'Rare','very-rare':'Very Rare',legendary:'Legendary'};
+const MTYPES=['Armor','Potion','Ring','Rod','Scroll','Staff','Wand','Weapon','Wondrous'];
+const CATS=['Nonmagical','Consumable','Combat','Noncombat','Summoning','Gamechanging'];
+const HINTS=['0','5','10','1d3','2d4','1d12','1d4+3','1d20-19'];
+
+// Presets matching 5emagic.shop city scaling (dice expressions capped at 10)
+const PRESETS={
+  village:   {mundane:'1d4+1',common:'1d3',uncommon:'0',rare:'0','very-rare':'0',legendary:'0'},
+  smalltown: {mundane:'1d4+3',common:'1d4',uncommon:'1d3',rare:'0','very-rare':'0',legendary:'0'},
+  largetown: {mundane:'2d4',common:'1d6',uncommon:'1d4',rare:'1d3-1','very-rare':'0',legendary:'0'},
+  smallcity: {mundane:'2d4+2',common:'2d4',uncommon:'1d6',rare:'1d4','very-rare':'1d3-1',legendary:'0'},
+  largecity: {mundane:'1d12',common:'2d4+2',uncommon:'2d4',rare:'1d6','very-rare':'1d4',legendary:'1d3-1'},
+  general:   {mundane:'1d20-19',common:'0',uncommon:'0',rare:'0','very-rare':'0',legendary:'0'},
+};
+
+// Full spell list by level
+const SBL={
+  0:['Acid Splash','Blade Ward','Booming Blade','Chill Touch','Control Flames','Create Bonfire','Dancing Lights','Druidcraft','Eldritch Blast','Encode Thoughts','Fire Bolt','Friends','Frostbite','Green-Flame Blade','Guidance','Gust','Infestation','Light','Lightning Lure','Mage Hand','Magic Stone','Mending','Message','Mind Sliver','Minor Illusion','Mold Earth','Poison Spray','Prestidigitation','Primal Savagery','Produce Flame','Ray of Frost','Resistance','Sacred Flame','Shape Water','Shillelagh','Shocking Grasp','Spare the Dying','Sword Burst','Thaumaturgy','Thorn Whip','Thunderclap','Toll the Dead','True Strike','Vicious Mockery','Word of Radiance'],
+  1:['Absorb Elements','Alarm','Animal Friendship','Armor of Agathys','Arms of Hadar','Bane','Beast Bond','Bless','Burning Hands','Catapult','Cause Fear','Charm Person','Chromatic Orb','Color Spray','Command','Compelled Duel','Create or Destroy Water','Cure Wounds','Detect Evil and Good','Detect Magic','Detect Poison and Disease','Disguise Self','Dissonant Whispers','Divine Favor','Earthen Grasp','Expeditious Retreat','Faerie Fire','False Life','Feather Fall','Find Familiar','Fog Cloud','Goodberry','Grease','Guiding Bolt','Hail of Thorns','Healing Word','Hellish Rebuke','Heroism','Hex','Hunter\'s Mark','Ice Knife','Identify','Illusory Script','Inflict Wounds','Jump','Longstrider','Mage Armor','Magic Missile','Protection from Evil and Good','Purify Food and Drink','Ray of Sickness','Sanctuary','Searing Smite','Silent Image','Sleep','Snare','Speak with Animals','Tasha\'s Hideous Laughter','Tenser\'s Floating Disk','Thunderous Smite','Thunderwave','Unseen Servant','Witch Bolt','Wrathful Smite','Zephyr Strike'],
+  2:['Aganazzar\'s Scorcher','Aid','Alter Self','Animal Messenger','Arcane Lock','Augury','Barkskin','Beast Sense','Blindness/Deafness','Blur','Borrowed Knowledge','Branding Smite','Calm Emotions','Cloud of Daggers','Continual Flame','Cordon of Arrows','Crown of Madness','Darkness','Darkvision','Detect Thoughts','Dragon\'s Breath','Dust Devil','Earthbind','Enhance Ability','Enlarge/Reduce','Enthrall','Find Steed','Find Traps','Flame Blade','Flaming Sphere','Fortune\'s Favor','Gust of Wind','Healing Spirit','Heat Metal','Hold Person','Invisibility','Knock','Levitate','Locate Animals or Plants','Locate Object','Magic Mouth','Magic Weapon','Maximilian\'s Earthen Grasp','Melf\'s Acid Arrow','Mind Spike','Mirror Image','Misty Step','Moonbeam','Nathair\'s Mischief','Nystul\'s Magic Aura','Pass Without Trace','Phantasmal Force','Prayer of Healing','Protection from Poison','Pyrotechnics','Ray of Enfeeblement','Rope Trick','See Invisibility','Shadow Blade','Shatter','Silence','Skywrite','Snilloc\'s Snowball Swarm','Spider Climb','Spike Growth','Spiritual Weapon','Suggestion','Summon Beast','Tasha\'s Mind Whip','Vortex Warp','Warding Bond','Web','Zone of Truth'],
+  3:['Animate Dead','Aura of Vitality','Beacon of Hope','Bestow Curse','Blink','Call Lightning','Catnap','Clairvoyance','Conjure Animals','Conjure Barrage','Counterspell','Create Food and Water','Crusader\'s Mantle','Daylight','Dispel Magic','Elemental Weapon','Enemies Abound','Erupting Earth','Fear','Feign Death','Fireball','Flame Arrows','Fly','Gaseous Form','Glyph of Warding','Haste','Hunger of Hadar','Hypnotic Pattern','Intellect Fortress','Leomund\'s Tiny Hut','Life Transference','Lightning Arrow','Lightning Bolt','Magic Circle','Major Image','Mass Healing Word','Meld into Stone','Melf\'s Minute Meteors','Nondetection','Plant Growth','Protection from Energy','Remove Curse','Revivify','Sending','Sleet Storm','Slow','Speak with Dead','Speak with Plants','Spirit Guardians','Spirit Shroud','Stinking Cloud','Summon Fey','Summon Lesser Demons','Summon Shadow Demon','Summon Undead','Thunder Step','Tidal Wave','Tiny Servant','Tongues','Vampiric Touch','Wall of Sand','Wall of Water','Water Breathing','Water Walk','Wind Wall'],
+  4:['Arcane Eye','Aura of Life','Aura of Purity','Banishment','Black Tentacles','Blight','Charm Monster','Compulsion','Confusion','Conjure Minor Elementals','Conjure Woodland Beings','Control Water','Death Ward','Dimension Door','Divination','Dominate Beast','Elemental Bane','Fabricate','Fire Shield','Freedom of Movement','Giant Insect','Grasping Vine','Gravity Sinkhole','Guardian of Faith','Hallucinatory Terrain','Ice Storm','Leomund\'s Secret Chest','Locate Creature','Mordenkainen\'s Faithful Hound','Mordenkainen\'s Private Sanctum','Otiluke\'s Resilient Sphere','Phantasmal Killer','Polymorph','Shadow of Moil','Sickening Radiance','Stone Shape','Stoneskin','Storm Sphere','Summon Aberration','Summon Construct','Summon Elemental','Summon Greater Demon','Vitriolic Sphere','Wall of Fire','Watery Sphere'],
+  5:['Animate Objects','Antilife Shell','Awaken','Banishing Smite','Bigby\'s Hand','Circle of Power','Cloudkill','Commune','Commune with Nature','Cone of Cold','Conjure Elemental','Conjure Volley','Contact Other Plane','Contagion','Control Winds','Creation','Danse Macabre','Dawn','Destructive Wave','Dispel Evil and Good','Dominate Person','Dream','Enervation','Far Step','Flame Strike','Geas','Greater Restoration','Hold Monster','Holy Weapon','Immolation','Infernal Calling','Insect Plague','Legend Lore','Maelstrom','Mass Cure Wounds','Mislead','Modify Memory','Passwall','Planar Binding','Raise Dead','Rary\'s Telepathic Bond','Reincarnate','Scrying','Seeming','Steel Wind Strike','Summon Celestial','Summon Draconic Spirit','Swift Quiver','Synaptic Static','Telekinesis','Telepathy','Teleportation Circle','Transmute Rock','Tree Stride','Wall of Force','Wall of Light','Wall of Stone','Wrath of Nature'],
+  6:['Arcane Gate','Blade Barrier','Bones of the Earth','Chain Lightning','Circle of Death','Conjure Fey','Contingency','Create Homunculus','Create Undead','Disintegrate','Drawmij\'s Instant Summons','Eyebite','Flesh to Stone','Forbiddance','Globe of Invulnerability','Guards and Wards','Harm','Heal','Heroes\' Feast','Investiture of Flame','Investiture of Ice','Investiture of Stone','Investiture of Wind','Magic Jar','Mass Suggestion','Mental Prison','Move Earth','Otiluke\'s Freezing Sphere','Otto\'s Irresistible Dance','Planar Ally','Primordial Ward','Programmed Illusion','Scatter','Soul Cage','Summon Fiend','Sunbeam','Tasha\'s Otherworldly Guise','Tenser\'s Transformation','True Seeing','Wall of Ice','Wall of Thorns','Wind Walk','Word of Recall'],
+  7:['Conjure Celestial','Crown of Stars','Delayed Blast Fireball','Divine Word','Etherealness','Finger of Death','Fire Storm','Forcecage','Mirage Arcane','Mordenkainen\'s Magnificent Mansion','Mordenkainen\'s Sword','Plane Shift','Power Word Pain','Prismatic Spray','Project Image','Regenerate','Resurrection','Reverse Gravity','Sequester','Simulacrum','Symbol','Teleport','Temple of the Gods','Whirlwind'],
+  8:['Abi-Dalzim\'s Horrid Wilting','Animal Shapes','Antimagic Field','Antipathy/Sympathy','Clone','Control Weather','Dark Star','Demiplane','Dominate Monster','Earthquake','Feeblemind','Glibness','Holy Aura','Illusory Dragon','Incendiary Cloud','Maddening Darkness','Maze','Mighty Fortress','Mind Blank','Power Word Stun','Reality Break','Sunburst','Tsunami'],
+  9:['Astral Projection','Blade of Disaster','Foresight','Gate','Imprisonment','Invulnerability','Mass Heal','Mass Polymorph','Meteor Swarm','Power Word Heal','Power Word Kill','Prismatic Wall','Psychic Scream','Ravenous Void','Shapechange','Storm of Vengeance','Time Stop','True Polymorph','True Resurrection','Weird','Wish'],
+};
+const SLVL={'Spell Scroll (Cantrip)':0,'Spell Scroll (1st Level)':1,'Spell Scroll (2nd Level)':2,'Spell Scroll (3rd Level)':3,'Spell Scroll (4th Level)':4,'Spell Scroll (5th Level)':5,'Spell Scroll (6th Level)':6,'Spell Scroll (7th Level)':7,'Spell Scroll (8th Level)':8,'Spell Scroll (9th Level)':9};
+
+function rspell(lvl){const l=SBL[lvl]||SBL[0];return l[Math.floor(Math.random()*l.length)];}
+
+// Dice parser: supports integer, NdM, NdM±K
+function parseDice(expr){
+  const s=String(expr||'').trim().replace(/\s/g,'').toLowerCase();
+  if(!s||s==='0')return{valid:true,roll:()=>0};
+  if(/^\d+$/.test(s)){const n=parseInt(s);return{valid:true,roll:()=>Math.min(10,n)};}
+  const m=s.match(/^(\d+)d(\d+)([+-]\d+)?$/);
+  if(!m)return{valid:false};
+  const num=parseInt(m[1]),die=parseInt(m[2]),mod=m[3]?parseInt(m[3]):0;
+  return{valid:true,roll:()=>{let t=mod;for(let i=0;i<num;i++)t+=Math.floor(Math.random()*die)+1;return Math.max(0,Math.min(10,t));}};
+}
+
+const ITEMS=[
+  // MUNDANE
+  {name:'Rope, Hempen (50ft)',type:'Adventuring Gear',rarity:'mundane',category:'Nonmagical',price:100},
+  {name:'Torch',type:'Adventuring Gear',rarity:'mundane',category:'Nonmagical',price:1},
+  {name:'Rations (1 day)',type:'Adventuring Gear',rarity:'mundane',category:'Nonmagical',price:5},
+  {name:'Waterskin',type:'Adventuring Gear',rarity:'mundane',category:'Nonmagical',price:20},
+  {name:'Tinderbox',type:'Adventuring Gear',rarity:'mundane',category:'Nonmagical',price:50},
+  {name:'Backpack',type:'Container',rarity:'mundane',category:'Nonmagical',price:200},
+  {name:'Bedroll',type:'Adventuring Gear',rarity:'mundane',category:'Nonmagical',price:100},
+  {name:'Blanket',type:'Adventuring Gear',rarity:'mundane',category:'Nonmagical',price:50},
+  {name:'Candle',type:'Adventuring Gear',rarity:'mundane',category:'Nonmagical',price:1},
+  {name:'Crowbar',type:'Adventuring Gear',rarity:'mundane',category:'Nonmagical',price:200},
+  {name:'Grappling Hook',type:'Adventuring Gear',rarity:'mundane',category:'Nonmagical',price:200},
+  {name:'Lantern, Bullseye',type:'Adventuring Gear',rarity:'mundane',category:'Nonmagical',price:1000},
+  {name:'Lantern, Hooded',type:'Adventuring Gear',rarity:'mundane',category:'Nonmagical',price:500},
+  {name:'Oil Flask',type:'Adventuring Gear',rarity:'mundane',category:'Nonmagical',price:10},
+  {name:'Mirror, Steel',type:'Adventuring Gear',rarity:'mundane',category:'Nonmagical',price:500},
+  {name:'Pole (10 ft)',type:'Adventuring Gear',rarity:'mundane',category:'Nonmagical',price:5},
+  {name:'Sack',type:'Container',rarity:'mundane',category:'Nonmagical',price:1},
+  {name:'Shovel',type:'Adventuring Gear',rarity:'mundane',category:'Nonmagical',price:200},
+  {name:'Signal Whistle',type:'Adventuring Gear',rarity:'mundane',category:'Nonmagical',price:5},
+  {name:'Spyglass',type:'Adventuring Gear',rarity:'mundane',category:'Nonmagical',price:100000},
+  {name:'Tent, Two-Person',type:'Adventuring Gear',rarity:'mundane',category:'Nonmagical',price:200},
+  {name:"Thieves' Tools",type:'Trade Tools',rarity:'mundane',category:'Nonmagical',price:2500},
+  {name:"Healer's Kit",type:'Kit',rarity:'mundane',category:'Nonmagical',price:500},
+  {name:"Climber's Kit",type:'Kit',rarity:'mundane',category:'Nonmagical',price:2500},
+  {name:'Disguise Kit',type:'Kit',rarity:'mundane',category:'Nonmagical',price:2500},
+  {name:'Forgery Kit',type:'Kit',rarity:'mundane',category:'Nonmagical',price:1500},
+  {name:"Poisoner's Kit",type:'Kit',rarity:'mundane',category:'Nonmagical',price:5000},
+  {name:'Holy Water (flask)',type:'Adventuring Gear',rarity:'mundane',category:'Nonmagical',price:2500},
+  {name:'Acid (vial)',type:'Adventuring Gear',rarity:'mundane',category:'Nonmagical',price:2500},
+  {name:"Alchemist's Fire",type:'Alchemical Supplies',rarity:'mundane',category:'Nonmagical',price:5000},
+  {name:'Antitoxin',type:'Alchemical Supplies',rarity:'mundane',category:'Nonmagical',price:5000},
+  {name:'Arrows (20)',type:'Ammunition',rarity:'mundane',category:'Nonmagical',price:100},
+  {name:'Crossbow Bolts (20)',type:'Ammunition',rarity:'mundane',category:'Nonmagical',price:100},
+  {name:'Dagger',type:'Weapon',rarity:'mundane',category:'Nonmagical',price:200},
+  {name:'Handaxe',type:'Weapon',rarity:'mundane',category:'Nonmagical',price:500},
+  {name:'Shortsword',type:'Weapon',rarity:'mundane',category:'Nonmagical',price:1000},
+  {name:'Longsword',type:'Weapon',rarity:'mundane',category:'Nonmagical',price:1500},
+  {name:'Greatsword',type:'Weapon',rarity:'mundane',category:'Nonmagical',price:5000},
+  {name:'Rapier',type:'Weapon',rarity:'mundane',category:'Nonmagical',price:2500},
+  {name:'Shortbow',type:'Weapon',rarity:'mundane',category:'Nonmagical',price:2500},
+  {name:'Longbow',type:'Weapon',rarity:'mundane',category:'Nonmagical',price:5000},
+  {name:'Light Crossbow',type:'Weapon',rarity:'mundane',category:'Nonmagical',price:2500},
+  {name:'Leather Armor',type:'Armor',rarity:'mundane',category:'Nonmagical',price:1000},
+  {name:'Chain Shirt',type:'Armor',rarity:'mundane',category:'Nonmagical',price:5000},
+  {name:'Scale Mail',type:'Armor',rarity:'mundane',category:'Nonmagical',price:5000},
+  {name:'Chain Mail',type:'Armor',rarity:'mundane',category:'Nonmagical',price:7500},
+  {name:'Plate Armor',type:'Armor',rarity:'mundane',category:'Nonmagical',price:150000},
+  {name:'Shield',type:'Armor',rarity:'mundane',category:'Nonmagical',price:1000},
+  {name:'Spell Components Pouch',type:'Arcane Gear',rarity:'mundane',category:'Nonmagical',price:2500},
+  {name:'Arcane Focus (Orb)',type:'Arcane Gear',rarity:'mundane',category:'Nonmagical',price:2000},
+  {name:'Arcane Focus (Wand)',type:'Arcane Gear',rarity:'mundane',category:'Nonmagical',price:1000},
+  {name:'Arcane Focus (Staff)',type:'Arcane Gear',rarity:'mundane',category:'Nonmagical',price:500},
+  {name:'Holy Symbol (Silver)',type:'Divine Gear',rarity:'mundane',category:'Nonmagical',price:500},
+  {name:"Alchemist's Supplies",type:'Artisan Supplies',rarity:'mundane',category:'Nonmagical',price:5000},
+  {name:"Cartographer's Tools",type:'Trade Tools',rarity:'mundane',category:'Nonmagical',price:1500},
+  {name:'Herbalism Kit',type:'Kit',rarity:'mundane',category:'Nonmagical',price:500},
+  {name:"Navigator's Tools",type:'Trade Tools',rarity:'mundane',category:'Nonmagical',price:2500},
+  {name:'Lute',type:'Musical Instrument',rarity:'mundane',category:'Nonmagical',price:3500},
+  {name:'Flute',type:'Musical Instrument',rarity:'mundane',category:'Nonmagical',price:200},
+  {name:'Drum',type:'Musical Instrument',rarity:'mundane',category:'Nonmagical',price:600},
+  {name:'Common Clothes',type:'Clothes',rarity:'mundane',category:'Nonmagical',price:50},
+  {name:'Fine Clothes',type:'Clothes',rarity:'mundane',category:'Nonmagical',price:1500},
+  {name:"Traveler's Clothes",type:'Clothes',rarity:'mundane',category:'Nonmagical',price:200},
+  {name:'Chest',type:'Container',rarity:'mundane',category:'Nonmagical',price:500},
+  {name:'Pouch',type:'Container',rarity:'mundane',category:'Nonmagical',price:50},
+  {name:'Agate (10 gp)',type:'Gemstone',rarity:'mundane',category:'Nonmagical',price:1000},
+  {name:'Quartz (50 gp)',type:'Gemstone',rarity:'mundane',category:'Nonmagical',price:5000},
+  {name:'Amethyst (100 gp)',type:'Gemstone',rarity:'mundane',category:'Nonmagical',price:10000},
+  {name:'Pearl (100 gp)',type:'Gemstone',rarity:'mundane',category:'Nonmagical',price:10000},
+  {name:'Topaz (500 gp)',type:'Gemstone',rarity:'mundane',category:'Nonmagical',price:50000},
+  {name:"Explorer's Pack",type:'Pack',rarity:'mundane',category:'Nonmagical',price:1000},
+  {name:"Dungeoneer's Pack",type:'Pack',rarity:'mundane',category:'Nonmagical',price:1200},
+  // SCROLLS
+  {name:'Spell Scroll (Cantrip)',type:'Scroll',rarity:'common',category:'Consumable',price:3000,s:1},
+  {name:'Spell Scroll (1st Level)',type:'Scroll',rarity:'common',category:'Consumable',price:7500,s:1},
+  {name:'Spell Scroll (2nd Level)',type:'Scroll',rarity:'uncommon',category:'Consumable',price:15000,s:1},
+  {name:'Spell Scroll (3rd Level)',type:'Scroll',rarity:'uncommon',category:'Consumable',price:30000,s:1},
+  {name:'Spell Scroll (4th Level)',type:'Scroll',rarity:'rare',category:'Consumable',price:50000,s:1},
+  {name:'Spell Scroll (5th Level)',type:'Scroll',rarity:'rare',category:'Consumable',price:90000,s:1},
+  {name:'Spell Scroll (6th Level)',type:'Scroll',rarity:'very-rare',category:'Consumable',price:150000,s:1},
+  {name:'Spell Scroll (7th Level)',type:'Scroll',rarity:'very-rare',category:'Consumable',price:250000,s:1},
+  {name:'Spell Scroll (8th Level)',type:'Scroll',rarity:'very-rare',category:'Consumable',price:350000,s:1},
+  {name:'Spell Scroll (9th Level)',type:'Scroll',rarity:'legendary',category:'Consumable',price:500000,s:1},
+  // POTIONS
+  {name:'Potion of Healing',type:'Potion',rarity:'common',category:'Consumable',price:5000},
+  {name:'Potion of Climbing',type:'Potion',rarity:'common',category:'Consumable',price:7500},
+  {name:'Potion of Animal Friendship',type:'Potion',rarity:'uncommon',category:'Consumable',price:10000},
+  {name:'Potion of Greater Healing',type:'Potion',rarity:'uncommon',category:'Consumable',price:15000},
+  {name:'Potion of Water Breathing',type:'Potion',rarity:'uncommon',category:'Consumable',price:10000},
+  {name:'Potion of Growth',type:'Potion',rarity:'uncommon',category:'Consumable',price:27000},
+  {name:'Potion of Heroism',type:'Potion',rarity:'uncommon',category:'Consumable',price:18000},
+  {name:'Potion of Resistance',type:'Potion',rarity:'uncommon',category:'Consumable',price:30000},
+  {name:'Potion of Hill Giant Strength',type:'Potion',rarity:'uncommon',category:'Consumable',price:20000},
+  {name:'Potion of Superior Healing',type:'Potion',rarity:'rare',category:'Consumable',price:50000},
+  {name:'Potion of Invisibility',type:'Potion',rarity:'very-rare',category:'Consumable',price:180000},
+  {name:'Potion of Speed',type:'Potion',rarity:'very-rare',category:'Consumable',price:100000},
+  {name:'Potion of Supreme Healing',type:'Potion',rarity:'very-rare',category:'Consumable',price:135000},
+  {name:'Potion of Storm Giant Strength',type:'Potion',rarity:'legendary',category:'Consumable',price:500000},
+  // UNCOMMON MAGIC
+  {name:'+1 Weapon',type:'Weapon',rarity:'uncommon',category:'Combat',price:75000},
+  {name:'+1 Shield',type:'Armor',rarity:'uncommon',category:'Combat',price:75000},
+  {name:'+1 Armor',type:'Armor',rarity:'uncommon',category:'Combat',price:150000},
+  {name:'Bag of Holding',type:'Wondrous',rarity:'uncommon',category:'Noncombat',price:40000},
+  {name:'Boots of Elvenkind',type:'Wondrous',rarity:'uncommon',category:'Noncombat',price:25000},
+  {name:'Boots of the Winterlands',type:'Wondrous',rarity:'uncommon',category:'Noncombat',price:30000,attune:true},
+  {name:'Bracers of Archery',type:'Wondrous',rarity:'uncommon',category:'Combat',price:15000,attune:true},
+  {name:'Brooch of Shielding',type:'Wondrous',rarity:'uncommon',category:'Combat',price:7500,attune:true},
+  {name:'Broom of Flying',type:'Wondrous',rarity:'uncommon',category:'Noncombat',price:80000},
+  {name:'Cap of Water Breathing',type:'Wondrous',rarity:'uncommon',category:'Noncombat',price:10000},
+  {name:'Cloak of Elvenkind',type:'Wondrous',rarity:'uncommon',category:'Noncombat',price:50000,attune:true},
+  {name:'Cloak of Protection',type:'Wondrous',rarity:'uncommon',category:'Combat',price:40000,attune:true},
+  {name:'Driftglobe',type:'Wondrous',rarity:'uncommon',category:'Noncombat',price:7500},
+  {name:'Dust of Disappearance',type:'Wondrous',rarity:'uncommon',category:'Consumable',price:30000},
+  {name:'Eversmoking Bottle',type:'Wondrous',rarity:'uncommon',category:'Noncombat',price:10000},
+  {name:'Eyes of Minute Seeing',type:'Wondrous',rarity:'uncommon',category:'Noncombat',price:25000},
+  {name:'Eyes of the Eagle',type:'Wondrous',rarity:'uncommon',category:'Noncombat',price:25000,attune:true},
+  {name:'Gauntlets of Ogre Power',type:'Wondrous',rarity:'uncommon',category:'Combat',price:8000,attune:true},
+  {name:'Gloves of Missile Snaring',type:'Wondrous',rarity:'uncommon',category:'Combat',price:15000,attune:true},
+  {name:'Gloves of Swimming and Climbing',type:'Wondrous',rarity:'uncommon',category:'Noncombat',price:20000,attune:true},
+  {name:'Goggles of Night',type:'Wondrous',rarity:'uncommon',category:'Noncombat',price:15000},
+  {name:'Hat of Disguise',type:'Wondrous',rarity:'uncommon',category:'Noncombat',price:5000,attune:true},
+  {name:'Headband of Intellect',type:'Wondrous',rarity:'uncommon',category:'Noncombat',price:8000,attune:true},
+  {name:'Helm of Comprehending Languages',type:'Wondrous',rarity:'uncommon',category:'Noncombat',price:50000},
+  {name:'Helm of Telepathy',type:'Wondrous',rarity:'uncommon',category:'Noncombat',price:30000,attune:true},
+  {name:'Immovable Rod',type:'Rod',rarity:'uncommon',category:'Noncombat',price:50000},
+  {name:'Javelin of Lightning',type:'Weapon',rarity:'uncommon',category:'Combat',price:15000},
+  {name:'Lantern of Revealing',type:'Wondrous',rarity:'uncommon',category:'Noncombat',price:50000},
+  {name:'Medallion of Thoughts',type:'Wondrous',rarity:'uncommon',category:'Noncombat',price:30000,attune:true},
+  {name:'Necklace of Adaptation',type:'Wondrous',rarity:'uncommon',category:'Noncombat',price:15000,attune:true},
+  {name:'Pearl of Power',type:'Wondrous',rarity:'uncommon',category:'Noncombat',price:80000,attune:true},
+  {name:'Periapt of Wound Closure',type:'Wondrous',rarity:'uncommon',category:'Combat',price:5000,attune:true},
+  {name:'Pipes of Haunting',type:'Wondrous',rarity:'uncommon',category:'Noncombat',price:30000},
+  {name:'Pipes of the Sewers',type:'Wondrous',rarity:'uncommon',category:'Summoning',price:20000,attune:true},
+  {name:'Quiver of Ehlonna',type:'Wondrous',rarity:'uncommon',category:'Noncombat',price:60000},
+  {name:'Ring of Jumping',type:'Ring',rarity:'uncommon',category:'Noncombat',price:5000,attune:true},
+  {name:'Ring of Mind Shielding',type:'Ring',rarity:'uncommon',category:'Noncombat',price:16000,attune:true},
+  {name:'Ring of Swimming',type:'Ring',rarity:'uncommon',category:'Noncombat',price:3000},
+  {name:'Ring of Warmth',type:'Ring',rarity:'uncommon',category:'Noncombat',price:10000,attune:true},
+  {name:'Ring of Water Walking',type:'Ring',rarity:'uncommon',category:'Noncombat',price:15000},
+  {name:'Robe of Useful Items',type:'Wondrous',rarity:'uncommon',category:'Noncombat',price:150000},
+  {name:'Rope of Climbing',type:'Wondrous',rarity:'uncommon',category:'Noncombat',price:20000},
+  {name:'Saddle of the Cavalier',type:'Wondrous',rarity:'uncommon',category:'Noncombat',price:20000},
+  {name:'Sending Stones',type:'Wondrous',rarity:'uncommon',category:'Noncombat',price:60000},
+  {name:'Slippers of Spider Climbing',type:'Wondrous',rarity:'uncommon',category:'Noncombat',price:50000,attune:true},
+  {name:'Stone of Good Luck',type:'Wondrous',rarity:'uncommon',category:'Noncombat',price:40000,attune:true},
+  {name:'Trident of Fish Command',type:'Weapon',rarity:'uncommon',category:'Noncombat',price:8000,attune:true},
+  {name:'Wand of Magic Detection',type:'Wand',rarity:'uncommon',category:'Noncombat',price:15000},
+  {name:'Wand of Magic Missiles',type:'Wand',rarity:'uncommon',category:'Combat',price:12000},
+  {name:'Wand of Secrets',type:'Wand',rarity:'uncommon',category:'Noncombat',price:15000},
+  {name:'Wand of Web',type:'Wand',rarity:'uncommon',category:'Combat',price:12000,attune:true},
+  {name:'Wand of the War Mage +1',type:'Wand',rarity:'uncommon',category:'Combat',price:12000,attune:true},
+  {name:'Wind Fan',type:'Wondrous',rarity:'uncommon',category:'Noncombat',price:10000},
+  // RARE
+  {name:'+2 Weapon',type:'Weapon',rarity:'rare',category:'Combat',price:400000},
+  {name:'+2 Shield',type:'Armor',rarity:'rare',category:'Combat',price:400000},
+  {name:'+2 Armor',type:'Armor',rarity:'rare',category:'Combat',price:400000},
+  {name:'Amulet of Health',type:'Wondrous',rarity:'rare',category:'Combat',price:8000,attune:true},
+  {name:'Amulet of Proof Against Detection',type:'Wondrous',rarity:'rare',category:'Noncombat',price:20000,attune:true},
+  {name:'Belt of Dwarvenkind',type:'Wondrous',rarity:'rare',category:'Noncombat',price:36000,attune:true},
+  {name:'Belt of Hill Giant Strength',type:'Wondrous',rarity:'rare',category:'Combat',price:12000,attune:true},
+  {name:'Boots of Levitation',type:'Wondrous',rarity:'rare',category:'Noncombat',price:40000,attune:true},
+  {name:'Boots of Speed',type:'Wondrous',rarity:'rare',category:'Combat',price:48000,attune:true},
+  {name:'Cape of the Mountebank',type:'Wondrous',rarity:'rare',category:'Noncombat',price:80000},
+  {name:'Cloak of Displacement',type:'Wondrous',rarity:'rare',category:'Combat',price:60000,attune:true},
+  {name:'Cloak of the Bat',type:'Wondrous',rarity:'rare',category:'Noncombat',price:60000,attune:true},
+  {name:'Cube of Force',type:'Wondrous',rarity:'rare',category:'Combat',price:160000,attune:true},
+  {name:"Daern's Instant Fortress",type:'Wondrous',rarity:'rare',category:'Noncombat',price:75000},
+  {name:'Flame Tongue Longsword',type:'Weapon',rarity:'rare',category:'Combat',price:300000,attune:true},
+  {name:'Gem of Seeing',type:'Wondrous',rarity:'rare',category:'Noncombat',price:200000,attune:true},
+  {name:'Giant Slayer',type:'Weapon',rarity:'rare',category:'Combat',price:150000},
+  {name:'Glamoured Studded Leather',type:'Armor',rarity:'rare',category:'Noncombat',price:27000},
+  {name:'Handy Haversack',type:'Wondrous',rarity:'rare',category:'Noncombat',price:200000},
+  {name:'Iron Bands of Bilarro',type:'Wondrous',rarity:'rare',category:'Combat',price:40000},
+  {name:'Mantle of Spell Resistance',type:'Wondrous',rarity:'rare',category:'Combat',price:30000,attune:true},
+  {name:'Necklace of Fireballs',type:'Wondrous',rarity:'rare',category:'Combat',price:10000},
+  {name:'Periapt of Proof Against Poison',type:'Wondrous',rarity:'rare',category:'Combat',price:20000},
+  {name:'Portable Hole',type:'Wondrous',rarity:'rare',category:'Noncombat',price:80000},
+  {name:'Ring of Evasion',type:'Ring',rarity:'rare',category:'Combat',price:25000,attune:true},
+  {name:'Ring of Feather Falling',type:'Ring',rarity:'rare',category:'Noncombat',price:2000,attune:true},
+  {name:'Ring of Free Action',type:'Ring',rarity:'rare',category:'Combat',price:32000,attune:true},
+  {name:'Ring of Protection',type:'Ring',rarity:'rare',category:'Combat',price:35000,attune:true},
+  {name:'Ring of Spell Storing',type:'Ring',rarity:'rare',category:'Noncombat',price:24000,attune:true},
+  {name:'Ring of the Ram',type:'Ring',rarity:'rare',category:'Combat',price:60000,attune:true},
+  {name:'Ring of X-Ray Vision',type:'Ring',rarity:'rare',category:'Noncombat',price:60000,attune:true},
+  {name:'Robe of Eyes',type:'Wondrous',rarity:'rare',category:'Noncombat',price:30000,attune:true},
+  {name:'Rope of Entanglement',type:'Wondrous',rarity:'rare',category:'Combat',price:30000},
+  {name:'Staff of Charming',type:'Staff',rarity:'rare',category:'Noncombat',price:17000,attune:true},
+  {name:'Staff of Healing',type:'Staff',rarity:'rare',category:'Combat',price:50000,attune:true},
+  {name:'Staff of Swarming Insects',type:'Staff',rarity:'rare',category:'Combat',price:15000,attune:true},
+  {name:'Staff of the Woodlands',type:'Staff',rarity:'rare',category:'Noncombat',price:45000,attune:true},
+  {name:'Staff of Withering',type:'Staff',rarity:'rare',category:'Combat',price:30000,attune:true},
+  {name:'Sun Blade',type:'Weapon',rarity:'rare',category:'Combat',price:50000,attune:true},
+  {name:'Sword of Life Stealing',type:'Weapon',rarity:'rare',category:'Combat',price:30000,attune:true},
+  {name:'Sword of Wounding',type:'Weapon',rarity:'rare',category:'Combat',price:30000,attune:true},
+  {name:'Vicious Weapon',type:'Weapon',rarity:'rare',category:'Combat',price:35000},
+  {name:'Wand of Binding',type:'Wand',rarity:'rare',category:'Combat',price:25000,attune:true},
+  {name:'Wand of Enemy Detection',type:'Wand',rarity:'rare',category:'Noncombat',price:8000,attune:true},
+  {name:'Wand of Fear',type:'Wand',rarity:'rare',category:'Combat',price:15000,attune:true},
+  {name:'Wand of Fireballs',type:'Wand',rarity:'rare',category:'Combat',price:40000,attune:true},
+  {name:'Wand of Lightning Bolts',type:'Wand',rarity:'rare',category:'Combat',price:40000,attune:true},
+  {name:'Wand of Paralysis',type:'Wand',rarity:'rare',category:'Combat',price:25000,attune:true},
+  {name:'Wand of the War Mage +2',type:'Wand',rarity:'rare',category:'Combat',price:40000,attune:true},
+  {name:'Wand of Wonder',type:'Wand',rarity:'rare',category:'Gamechanging',price:50000,attune:true},
+  {name:'Wings of Flying',type:'Wondrous',rarity:'rare',category:'Noncombat',price:40000,attune:true},
+  // VERY RARE
+  {name:'+3 Weapon',type:'Weapon',rarity:'very-rare',category:'Combat',price:2000000},
+  {name:'+3 Shield',type:'Armor',rarity:'very-rare',category:'Combat',price:2000000},
+  {name:'+3 Armor',type:'Armor',rarity:'very-rare',category:'Combat',price:2000000},
+  {name:'Amulet of the Planes',type:'Wondrous',rarity:'very-rare',category:'Gamechanging',price:160000,attune:true},
+  {name:'Animated Shield',type:'Armor',rarity:'very-rare',category:'Combat',price:110000,attune:true},
+  {name:'Belt of Fire Giant Strength',type:'Wondrous',rarity:'very-rare',category:'Combat',price:30000,attune:true},
+  {name:'Carpet of Flying',type:'Wondrous',rarity:'very-rare',category:'Noncombat',price:200000},
+  {name:'Cloak of Arachnida',type:'Wondrous',rarity:'very-rare',category:'Noncombat',price:90000,attune:true},
+  {name:'Crystal Ball',type:'Wondrous',rarity:'very-rare',category:'Noncombat',price:50000,attune:true},
+  {name:'Dancing Sword',type:'Weapon',rarity:'very-rare',category:'Combat',price:150000,attune:true},
+  {name:'Demon Armor',type:'Armor',rarity:'very-rare',category:'Combat',price:100000,attune:true},
+  {name:'Dragon Scale Mail',type:'Armor',rarity:'very-rare',category:'Combat',price:4000,attune:true},
+  {name:'Efreeti Bottle',type:'Wondrous',rarity:'very-rare',category:'Summoning',price:145000},
+  {name:'Frost Brand',type:'Weapon',rarity:'very-rare',category:'Combat',price:50000,attune:true},
+  {name:'Helm of Brilliance',type:'Wondrous',rarity:'very-rare',category:'Combat',price:100000,attune:true},
+  {name:'Helm of Teleportation',type:'Wondrous',rarity:'very-rare',category:'Gamechanging',price:90000,attune:true},
+  {name:'Horn of Valhalla (Bronze)',type:'Wondrous',rarity:'very-rare',category:'Summoning',price:100000},
+  {name:'Horseshoes of the Zephyr',type:'Wondrous',rarity:'very-rare',category:'Noncombat',price:150000},
+  {name:'Ioun Stone (Absorption)',type:'Wondrous',rarity:'very-rare',category:'Combat',price:120000,attune:true},
+  {name:'Mirror of Life Trapping',type:'Wondrous',rarity:'very-rare',category:'Gamechanging',price:270000},
+  {name:'Nine Lives Stealer',type:'Weapon',rarity:'very-rare',category:'Combat',price:100000,attune:true},
+  {name:"Nolzur's Marvelous Pigments",type:'Wondrous',rarity:'very-rare',category:'Gamechanging',price:200000},
+  {name:'Ring of Regeneration',type:'Ring',rarity:'very-rare',category:'Combat',price:90000,attune:true},
+  {name:'Ring of Shooting Stars',type:'Ring',rarity:'very-rare',category:'Combat',price:50000,attune:true},
+  {name:'Ring of Telekinesis',type:'Ring',rarity:'very-rare',category:'Gamechanging',price:90000,attune:true},
+  {name:'Rod of Absorption',type:'Rod',rarity:'very-rare',category:'Combat',price:50000,attune:true},
+  {name:'Rod of Alertness',type:'Rod',rarity:'very-rare',category:'Combat',price:80000,attune:true},
+  {name:'Rod of Security',type:'Rod',rarity:'very-rare',category:'Noncombat',price:200000},
+  {name:'Scimitar of Speed',type:'Weapon',rarity:'very-rare',category:'Combat',price:160000,attune:true},
+  {name:'Spellguard Shield',type:'Armor',rarity:'very-rare',category:'Combat',price:60000,attune:true},
+  {name:'Staff of Fire',type:'Staff',rarity:'very-rare',category:'Combat',price:200000,attune:true},
+  {name:'Staff of Frost',type:'Staff',rarity:'very-rare',category:'Combat',price:200000,attune:true},
+  {name:'Staff of Power',type:'Staff',rarity:'very-rare',category:'Gamechanging',price:235000,attune:true},
+  {name:'Staff of Thunder and Lightning',type:'Staff',rarity:'very-rare',category:'Combat',price:200000,attune:true},
+  {name:'Sword of Sharpness',type:'Weapon',rarity:'very-rare',category:'Combat',price:80000,attune:true},
+  {name:'Tome of Clear Thought',type:'Wondrous',rarity:'very-rare',category:'Gamechanging',price:5000000},
+  {name:'Wand of Polymorph',type:'Wand',rarity:'very-rare',category:'Gamechanging',price:100000,attune:true},
+  {name:'Wand of the War Mage +3',type:'Wand',rarity:'very-rare',category:'Combat',price:100000,attune:true},
+  // LEGENDARY
+  {name:'Apparatus of Kwalish',type:'Wondrous',rarity:'legendary',category:'Noncombat',price:2000000},
+  {name:'Armor of Invulnerability',type:'Armor',rarity:'legendary',category:'Combat',price:3000000,attune:true},
+  {name:'Belt of Cloud Giant Strength',type:'Wondrous',rarity:'legendary',category:'Combat',price:120000,attune:true},
+  {name:'Belt of Storm Giant Strength',type:'Wondrous',rarity:'legendary',category:'Combat',price:500000,attune:true},
+  {name:'Cloak of Invisibility',type:'Wondrous',rarity:'legendary',category:'Noncombat',price:180000,attune:true},
+  {name:'Crystal Ball of True Seeing',type:'Wondrous',rarity:'legendary',category:'Noncombat',price:500000,attune:true},
+  {name:'Cubic Gate',type:'Wondrous',rarity:'legendary',category:'Gamechanging',price:1000000},
+  {name:'Deck of Many Things',type:'Wondrous',rarity:'legendary',category:'Gamechanging',price:6204},
+  {name:'Defender',type:'Weapon',rarity:'legendary',category:'Combat',price:200000,attune:true},
+  {name:'Hammer of Thunderbolts',type:'Weapon',rarity:'legendary',category:'Gamechanging',price:3000000,attune:true},
+  {name:'Holy Avenger',type:'Weapon',rarity:'legendary',category:'Gamechanging',price:165000,attune:true},
+  {name:'Iron Flask',type:'Wondrous',rarity:'legendary',category:'Summoning',price:150000},
+  {name:'Luck Blade',type:'Weapon',rarity:'legendary',category:'Gamechanging',price:200000,attune:true},
+  {name:'Orb of Dragonkind',type:'Wondrous',rarity:'legendary',category:'Gamechanging',price:300000,attune:true},
+  {name:'Plate Armor of Etherealness',type:'Armor',rarity:'legendary',category:'Gamechanging',price:6000000,attune:true},
+  {name:'Ring of Djinni Summoning',type:'Ring',rarity:'legendary',category:'Summoning',price:900000,attune:true},
+  {name:'Ring of Elemental Command',type:'Ring',rarity:'legendary',category:'Gamechanging',price:600000,attune:true},
+  {name:'Ring of Spell Turning',type:'Ring',rarity:'legendary',category:'Combat',price:300000,attune:true},
+  {name:'Ring of Three Wishes',type:'Ring',rarity:'legendary',category:'Gamechanging',price:3000000},
+  {name:'Robe of the Archmagi',type:'Wondrous',rarity:'legendary',category:'Gamechanging',price:300000,attune:true},
+  {name:'Rod of Lordly Might',type:'Rod',rarity:'legendary',category:'Gamechanging',price:100000,attune:true},
+  {name:'Rod of Resurrection',type:'Rod',rarity:'legendary',category:'Gamechanging',price:1000000,attune:true},
+  {name:'Scarab of Protection',type:'Wondrous',rarity:'legendary',category:'Combat',price:360000,attune:true},
+  {name:'Sphere of Annihilation',type:'Wondrous',rarity:'legendary',category:'Gamechanging',price:25000},
+  {name:'Staff of the Magi',type:'Staff',rarity:'legendary',category:'Gamechanging',price:600000,attune:true},
+  {name:'Sword of Answering',type:'Weapon',rarity:'legendary',category:'Combat',price:600000,attune:true},
+  {name:'Talisman of Pure Good',type:'Wondrous',rarity:'legendary',category:'Gamechanging',price:50000,attune:true},
+  {name:'Talisman of Ultimate Evil',type:'Wondrous',rarity:'legendary',category:'Gamechanging',price:61600,attune:true},
+  {name:'Vorpal Sword',type:'Weapon',rarity:'legendary',category:'Gamechanging',price:150000,attune:true},
+  {name:'Well of Many Worlds',type:'Wondrous',rarity:'legendary',category:'Gamechanging',price:150000},
+];
+
+function fmtPrice(cp){
+  if(cp<100)return cp+' cp';
+  const sp=cp/10;
+  if(sp<100)return(sp%10===0?sp:sp.toFixed(1))+' sp';
+  const gp=cp/100;
+  if(gp>=1000)return Math.round(gp).toLocaleString()+' gp';
+  return gp.toFixed(gp<10?1:0)+' gp';
+}
+function getChecked(id){return Array.from(document.querySelectorAll('#'+id+' input:checked')).map(e=>e.value);}
+function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
+
+function buildUI(){
+  const cont=document.getElementById('rarity-inputs');
+  RARITIES.forEach(r=>{
+    const b=document.createElement('div');b.className='rarity-block';
+    b.innerHTML=`<div class="rarity-row"><span class="rlabel ${r}">${RLABELS[r]}</span><input class="dice-input" id="di_${r}" type="text" value="0" placeholder="e.g. 2d4-2" autocomplete="off" spellcheck="false" oninput="validate('${r}')"></div><div class="dice-hints">${HINTS.map(h=>`<button class="hbtn" onclick="setD('${r}','${h}')">${h}</button>`).join('')}</div>`;
+    cont.appendChild(b);
+  });
+  const mt=document.getElementById('magicTypes');
+  MTYPES.forEach(t=>{mt.innerHTML+=`<label class="ci"><input type="checkbox" value="${t}" checked>${t}</label>`;});
+  const ct=document.getElementById('categories');
+  CATS.forEach(c=>{ct.innerHTML+=`<label class="ci"><input type="checkbox" value="${c}" checked>${c}</label>`;});
+}
+
+function setD(r,v){const e=document.getElementById('di_'+r);e.value=v;e.classList.remove('invalid');}
+function validate(r){const e=document.getElementById('di_'+r);const p=parseDice(e.value);e.classList.toggle('invalid',e.value.trim()!==''&&!p.valid);}
+function applyPreset(k){const p=PRESETS[k];RARITIES.forEach(r=>setD(r,p[r]||'0'));}
+function toggleAdv(){const s=document.getElementById('advSec'),l=document.querySelector('.tog');s.classList.toggle('open');l.textContent=s.classList.contains('open')?'▾ Advanced Filters':'▸ Advanced Filters';}
+
+document.getElementById('markup').addEventListener('input',function(){
+  const v=parseInt(this.value);document.getElementById('markupVal').textContent=(v>=0?'+':'')+v+'%';
+});
+
+function generateShop(){
+  const mk=parseInt(document.getElementById('markup').value)/100;
+  const addP=document.getElementById('addPotions').checked;
+  const aT=getChecked('magicTypes'),aC=getChecked('categories');
+  const res={};let total=0;
+
+  RARITIES.forEach(r=>{
+    const p=parseDice(document.getElementById('di_'+r).value);
+    if(!p||!p.valid)return;
+    const cnt=p.roll();if(!cnt)return;
+    let pool=ITEMS.filter(i=>{
+      if(i.rarity!==r)return false;
+      if(r==='mundane')return true;
+      return aT.includes(i.type)&&aC.includes(i.category);
+    });
+    if(!pool.length)return;
+    shuffle(pool);
+    res[r]=pool.slice(0,cnt).map(i=>i.s?{...i,_spell:rspell(SLVL[i.name]??0)}:i);
+    total+=res[r].length;
+  });
+
+  if(addP){
+    const p=ITEMS.find(i=>i.name==='Potion of Healing');
+    if(p){if(!res.common)res.common=[];if(!res.common.find(i=>i.name==='Potion of Healing')){res.common.unshift(p);total++;}}
+  }
+
+  document.getElementById('rc').textContent=total+' item'+(total!==1?'s':'');
+
+  if(!total){document.getElementById('results').innerHTML='<div class="empty">No items found. Adjust your filters or quantities.</div>';return;}
+
+  const BDGE={mundane:'bm',common:'bc',uncommon:'bu',rare:'br','very-rare':'bvr',legendary:'bl'};
+  let html='';
+  RARITIES.forEach(r=>{
+    const list=res[r];if(!list||!list.length)return;
+    html+=`<div class="rsec"><div class="rsec-hdr"><span class="rbadge ${BDGE[r]}">${RLABELS[r].toUpperCase()}</span><span style="font-size:.8rem;color:var(--text-dim)">${list.length} item${list.length!==1?'s':''}</span></div><div class="ig">`;
+    list.forEach(item=>{
+      const price=Math.round(item.price*(1+mk));
+      const isrc=item.rarity==='mundane'?'xphb':'xdmg';
+      const ilink=`https://5e.tools/items.html#${encodeURIComponent(item.name.toLowerCase())}_${isrc}`;
+      let spellHtml='';
+      if(item._spell){
+        // Spells not in XPHB (XGE=xge, TCE=tce, etc.)
+        const SPELL_SRC={'Aganazzar\'s Scorcher':'xge','Beast Bond':'xge','Bones of the Earth':'xge','Catapult':'xge','Cause Fear':'xge','Control Flames':'xge','Create Bonfire':'xge','Dust Devil':'xge','Earthbind':'xge','Elemental Bane':'xge','Enemies Abound':'xge','Erupting Earth':'xge','Far Step':'xge','Flame Arrows':'xge','Frostbite':'xge','Gust':'xge','Healing Spirit':'xge','Infestation':'xge','Investiture of Flame':'xge','Investiture of Ice':'xge','Investiture of Stone':'xge','Investiture of Wind':'xge','Life Transference':'xge','Maximilian\'s Earthen Grasp':'xge','Melf\'s Minute Meteors':'xge','Mind Spike':'xge','Primal Savagery':'xge','Primordial Ward':'xge','Pyrotechnics':'xge','Shadow Blade':'xge','Shape Water':'xge','Skywrite':'xge','Snilloc\'s Snowball Swarm':'xge','Storm Sphere':'xge','Sudden Awakening':'xge','Sword Burst':'xge','Thunder Step':'xge','Tidal Wave':'xge','Transmute Rock':'xge','Vitriolic Sphere':'xge','Wall of Sand':'xge','Wall of Water':'xge','Warding Wind':'xge','Watery Sphere':'xge','Word of Radiance':'xge','Zephyr Strike':'xge',
+          'Borrowed Knowledge':'scc','Nathair\'s Mischief':'ftd','Raulothim\'s Psychic Lance':'ftd','Summon Draconic Spirit':'ftd',
+          'Booming Blade':'tce','Green-Flame Blade':'tce','Intellect Fortress':'tce','Mind Sliver':'tce','Spirit Shroud':'tce','Summon Aberration':'tce','Summon Beast':'tce','Summon Celestial':'tce','Summon Construct':'tce','Summon Elemental':'tce','Summon Fey':'tce','Summon Fiend':'tce','Summon Greater Demon':'tce','Summon Lesser Demons':'tce','Summon Shadow Demon':'tce','Summon Undead':'tce','Tasha\'s Caustic Brew':'tce','Tasha\'s Mind Whip':'tce','Tasha\'s Otherworldly Guise':'tce','Vortex Warp':'tce','Wristpocket':'tce',
+          'Blade of Disaster':'tce','Dream of the Blue Veil':'tce','Ravenous Void':'egw','Reality Break':'egw','Time Ravage':'egw','Tether Essence':'egw',
+          'Dark Star':'egw','Gravity Sinkhole':'egw','Psychic Scream':'xge','Encode Thoughts':'ggr','Fortune\'s Favor':'egw','Incite Greed':'acok',
+          'Danse Macabre':'xge','Negative Energy Flood':'xge','Power Word Pain':'xge','Temple of the Gods':'xge','Whirlwind':'xge'};
+        const ssrc=SPELL_SRC[item._spell]||'xphb';
+        const slink=`https://5e.tools/spells.html#${encodeURIComponent(item._spell.toLowerCase())}_${ssrc}`;
+        spellHtml=`<div class="ispell">✦ <a href="${slink}" target="_blank">${item._spell}</a></div>`;
+      }
+      html+=`<div class="icard"><div class="iname"><a href="${ilink}" target="_blank">${item.name}</a></div>${spellHtml}<div class="itype">${item.type}${item.category&&item.category!=='Nonmagical'?' · '+item.category:''}</div><div class="iprice">${fmtPrice(price)}</div>${item.attune?'<div class="iatt">Requires attunement</div>':''}</div>`;
+    });
+    html+='</div></div>';
+  });
+  document.getElementById('results').innerHTML=html;
+}
+
+buildUI();
+</script>
+</body>
+</html>

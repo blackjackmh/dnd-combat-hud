@@ -1,0 +1,1324 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Combat HUD — Dragon of Icespire Peak</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --bg: #ffffff; --bg2: #f5f4f0; --bg3: #eeecea;
+    --text: #1a1a1a; --text2: #666; --text3: #999;
+    --border: rgba(0,0,0,0.12); --border2: rgba(0,0,0,0.22);
+    --green: #1d9e75; --amber: #ba7517; --red: #e24b4a;
+    --blue: #185fa5; --blue-bg: #e6f1fb; --blue-text: #0c447c;
+    --warn: #ba7517; --warn-bg: #faeeda; --warn-text: #633806;
+    --info: #185fa5; --info-bg: #e6f1fb; --info-text: #0c447c;
+    --radius: 8px; --radius-lg: 12px;
+  }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: var(--bg3); color: var(--text); min-height: 100vh; }
+
+  /* SELECTION */
+  #select-screen { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; padding: 32px 16px; }
+  #select-screen h1 { font-size: 22px; font-weight: 500; margin-bottom: 6px; }
+  #select-screen p { font-size: 13px; color: var(--text2); margin-bottom: 28px; }
+  .char-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; width: 100%; max-width: 720px; margin-bottom: 24px; }
+  .char-card { background: var(--bg); border: 1.5px solid var(--border); border-radius: var(--radius-lg); padding: 16px; cursor: pointer; transition: border-color .15s; user-select: none; }
+  .char-card:hover { border-color: var(--blue); }
+  .char-card.selected { border-color: var(--blue); background: var(--blue-bg); }
+  .char-card .cn { font-size: 14px; font-weight: 500; }
+  .char-card .cs { font-size: 12px; color: var(--text2); margin-top: 2px; }
+  .char-card .cstats { font-size: 11px; color: var(--text3); margin-top: 8px; display: flex; gap: 8px; flex-wrap: wrap; }
+  .char-card .cstats span { background: var(--bg2); padding: 2px 7px; border-radius: 99px; }
+  .start-btn { font-size: 14px; padding: 10px 32px; border-radius: var(--radius); border: 1.5px solid var(--blue); color: var(--blue-text); background: var(--blue-bg); cursor: pointer; font-weight: 500; }
+  .start-btn:disabled { opacity: .4; cursor: not-allowed; }
+  .start-btn:not(:disabled):hover { background: #b5d4f4; }
+
+  /* HUD */
+  #hud-screen { display: none; padding: 12px 14px; max-width: 1600px; margin: 0 auto; }
+  .slabel { font-size: 11px; font-weight: 500; color: var(--text2); margin: 12px 0 6px; letter-spacing: .04em; text-transform: uppercase; display: flex; justify-content: space-between; align-items: center; }
+  .turn-banner { background: var(--bg); border: .5px solid var(--border2); border-radius: var(--radius); padding: 8px 14px; margin-bottom: 10px; display: flex; align-items: center; gap: 10px; }
+  .turn-label { font-size: 11px; color: var(--text2); }
+  .turn-name { font-size: 15px; font-weight: 500; }
+  .round-badge { margin-left: auto; font-size: 12px; color: var(--text2); }
+
+  /* init table */
+  .init-table { width: 100%; border-collapse: collapse; margin-bottom: 12px; font-size: 12px; }
+  .init-table th { text-align: left; font-size: 11px; font-weight: 500; color: var(--text2); padding: 4px 8px; border-bottom: .5px solid var(--border); }
+  .init-table td { padding: 5px 8px; border-bottom: .5px solid var(--border); vertical-align: middle; }
+  .init-table tr.arow td { background: var(--blue-bg); color: var(--blue-text); }
+  .init-table tr.drow td { opacity: .4; text-decoration: line-through; }
+  .init-table input[type=number] { width: 52px; font-size: 12px; padding: 2px 5px; border-radius: var(--radius); border: .5px solid var(--border2); background: var(--bg); color: var(--text); text-align: center; }
+
+  /* hero row: 4 cols */
+  .hero-row { background: var(--bg); border: .5px solid var(--border); border-radius: var(--radius-lg); padding: 10px 14px; margin-bottom: 8px; display: grid; grid-template-columns: 160px 180px minmax(0,1fr) minmax(0,1fr); gap: 12px; align-items: start; }
+  .hero-row.aturn { border-color: var(--blue); border-width: 1.5px; }
+  .hero-row.dead { opacity: .4; }
+  .cname { font-size: 13px; font-weight: 500; }
+  .csub { font-size: 11px; color: var(--text2); margin-top: 1px; margin-bottom: 4px; }
+  .acbadge { display: inline-block; font-size: 11px; color: var(--text2); background: var(--bg2); border-radius: var(--radius); padding: 2px 7px; border: .5px solid var(--border); margin-bottom: 6px; }
+  .hp-num { font-size: 22px; font-weight: 500; line-height: 1; margin-bottom: 4px; }
+  .hp-bar-bg { height: 5px; background: var(--bg2); border-radius: 99px; overflow: hidden; margin-bottom: 5px; }
+  .hp-bar-fill { height: 100%; border-radius: 99px; transition: width .3s; }
+  .hp-ctrl { display: flex; gap: 4px; align-items: center; margin-bottom: 6px; }
+  .hp-ctrl input { width: 46px; font-size: 12px; text-align: center; padding: 2px 4px; border-radius: var(--radius); border: .5px solid var(--border2); background: var(--bg); color: var(--text); }
+  .pm-btn { width: 27px; height: 25px; font-size: 17px; font-weight: 400; line-height: 1; border-radius: var(--radius); border: .5px solid var(--border2); background: var(--bg); color: var(--text); cursor: pointer; display: flex; align-items: center; justify-content: center; padding: 0; }
+  .pm-btn:hover { background: var(--bg2); }
+  .cond-list { display: flex; flex-wrap: wrap; gap: 3px; margin-bottom: 5px; }
+  .ctag { font-size: 10px; padding: 2px 7px; border-radius: 99px; border: .5px solid var(--warn); color: var(--warn-text); background: var(--warn-bg); cursor: pointer; user-select: none; }
+  .cond-select { font-size: 11px; padding: 2px 6px; border-radius: var(--radius); border: .5px solid var(--border2); background: var(--bg); color: var(--text); width: 100%; cursor: pointer; }
+  .blabel { font-size: 10px; font-weight: 500; color: var(--text2); margin-bottom: 4px; text-transform: uppercase; letter-spacing: .03em; }
+  .divider { height: .5px; background: var(--border); margin: 5px 0; }
+  .atk-row { font-size: 11px; color: var(--text2); line-height: 1.7; border-bottom: .5px solid var(--border); padding-bottom: 3px; margin-bottom: 3px; }
+  .atk-row:last-child { border-bottom: none; margin-bottom: 0; padding-bottom: 0; }
+  .atk-name { font-size: 12px; font-weight: 500; color: var(--text); }
+
+  /* Spell list with prepare checkboxes */
+  .spell-list { margin-top: 2px; }
+  .spell-lvl-group { margin-bottom: 6px; }
+  .spell-lvl-header { font-size: 10px; font-weight: 500; color: var(--text3); text-transform: uppercase; letter-spacing: .04em; margin-bottom: 3px; padding-bottom: 2px; border-bottom: .5px solid var(--border); }
+  .spell-item { display: flex; align-items: baseline; gap: 5px; font-size: 11px; line-height: 1.7; }
+  .spell-item input[type=checkbox] { margin: 0; cursor: pointer; flex-shrink: 0; position: relative; top: 1px; }
+  .spell-item.always-prepared { }
+  .spell-name { font-weight: 500; color: #2a2a2a; }
+  .spell-name a { color: #2a2a2a; text-decoration: none; border-bottom: 1px dotted #bbb; }
+  .spell-name a:hover { border-bottom-color: #555; }
+  .spell-meta { font-size: 10px; color: #888; }
+  .spell-prepared-count { font-size: 10px; color: var(--text2); margin-bottom: 4px; }
+  .spell-prepared-count.over { color: var(--red); font-weight: 500; }
+
+  /* ability scores col */
+  .ability-grid { display: grid; grid-template-columns: 1fr; gap: 2px; }
+  .ability-row { font-size: 11px; display: flex; flex-direction: column; border-bottom: .5px solid var(--border); padding-bottom: 3px; margin-bottom: 3px; }
+  .ability-row:last-child { border-bottom: none; margin-bottom: 0; padding-bottom: 0; }
+  .ability-main { display: flex; justify-content: space-between; align-items: center; }
+  .ability-name { font-size: 11px; font-weight: 500; color: var(--text); }
+  .ability-score { font-size: 11px; color: var(--text2); }
+  .ability-skills { font-size: 10px; color: var(--text3); margin-top: 1px; padding-left: 4px; }
+  .ability-skills span { display: block; }
+  .skill-prof { color: var(--blue-text); font-weight: 500; }
+  .skill-expert { color: var(--green); font-weight: 500; }
+  .save-prof { font-size: 10px; color: var(--text2); margin-top: 1px; display: flex; flex-wrap: wrap; gap: 4px; }
+  .save-tag { background: var(--bg2); border-radius: 99px; padding: 1px 6px; border: .5px solid var(--border); font-size: 10px; }
+
+  /* resources */
+  .res-wrap { display: flex; flex-wrap: wrap; gap: 4px; }
+  .rtag { font-size: 10px; padding: 2px 8px; border-radius: 99px; border: .5px solid var(--green); color: #085041; background: #e1f5ee; cursor: pointer; user-select: none; white-space: nowrap; }
+  .rtag.used { border-color: var(--border); color: var(--text3); text-decoration: line-through; opacity: .5; background: none; }
+  .hitag { font-size: 10px; padding: 2px 8px; border-radius: 99px; border: .5px solid var(--warn); color: var(--warn-text); background: var(--warn-bg); cursor: pointer; user-select: none; white-space: nowrap; }
+  .hitag.used { border-color: var(--border); color: var(--text3); text-decoration: line-through; opacity: .5; background: none; }
+  .cres-tag { font-size: 10px; padding: 2px 8px; border-radius: 99px; border: .5px solid var(--info); color: var(--info-text); background: var(--info-bg); cursor: pointer; user-select: none; white-space: nowrap; }
+  .cres-tag.exhausted { border-color: var(--border); color: var(--text3); text-decoration: line-through; opacity: .5; background: none; }
+
+  /* monster grid */
+  .monster-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-bottom: 8px; }
+  .mcard { background: var(--bg); border: .5px solid var(--border); border-radius: var(--radius-lg); padding: 10px 12px; }
+  .mcard.aturn { border-color: var(--blue); border-width: 1.5px; }
+  .mcard.dead { opacity: .4; }
+  .rm-btn { font-size: 10px; padding: 1px 6px; border-radius: var(--radius); border: .5px solid var(--red); color: var(--red); background: none; cursor: pointer; }
+  .rm-btn:hover { background: #fcebeb; }
+
+  /* Monster stat block contenteditable */
+  .stat-block-field {
+    font-size: 11px; color: var(--text); line-height: 1.6;
+    border: .5px solid var(--border); border-radius: var(--radius);
+    padding: 5px 8px; min-height: 40px; background: var(--bg2);
+    white-space: pre-wrap; word-break: break-word;
+    outline: none; cursor: text;
+    margin-top: 4px;
+    font-style: normal; font-weight: normal;
+  }
+  .stat-block-field:focus { border-color: var(--blue); background: var(--bg); }
+  .stat-block-field:empty::before { content: attr(data-placeholder); color: var(--text3); pointer-events: none; }
+
+  /* Info block */
+  .info-block-field {
+    font-size: 11px; color: var(--text); line-height: 1.6;
+    border: .5px solid var(--border); border-radius: var(--radius);
+    padding: 5px 8px; min-height: 30px; background: #fffbe6;
+    white-space: pre-wrap; word-break: break-word;
+    outline: none; cursor: text; margin-top: 4px;
+    border-color: #e0c84a;
+    font-style: normal !important; font-weight: normal !important;
+  }
+  .info-block-field:focus { border-color: #b8a020; background: #fffdf0; }
+  .info-block-field:empty::before { content: attr(data-placeholder); color: #b8a84a; pointer-events: none; }
+  .info-block-field b, .info-block-field i, .info-block-field strong, .info-block-field em { font-weight: normal !important; font-style: normal !important; }
+
+  /* Monster card top action buttons */
+  .mcard-actions { display: flex; gap: 4px; align-items: center; }
+  .dup-btn { font-size: 10px; padding: 1px 7px; border-radius: var(--radius); border: .5px solid var(--green); color: #085041; background: #e1f5ee; cursor: pointer; }
+  .dup-btn:hover { background: #c0e8d8; }
+  .edit-btn { font-size: 10px; padding: 1px 7px; border-radius: var(--radius); border: .5px solid var(--blue); color: var(--blue-text); background: var(--blue-bg); cursor: pointer; }
+  .edit-btn:hover { background: #b5d4f4; }
+
+  /* Death saves */
+  .death-saves { margin-top: 8px; padding: 6px 8px; background: #fef0f0; border: .5px solid #e8b0b0; border-radius: var(--radius); }
+  .death-saves-title { font-size: 10px; font-weight: 500; color: var(--red); text-transform: uppercase; letter-spacing: .04em; margin-bottom: 5px; }
+  .death-saves-row { display: flex; align-items: center; gap: 6px; margin-bottom: 3px; }
+  .death-saves-label { font-size: 10px; color: var(--text2); width: 52px; flex-shrink: 0; }
+  .ds-pip { width: 16px; height: 16px; border-radius: 50%; border: 1.5px solid var(--border2); background: var(--bg); cursor: pointer; display: inline-block; transition: background .15s; flex-shrink: 0; }
+  .ds-pip.success { background: var(--green); border-color: var(--green); }
+  .ds-pip.fail { background: var(--red); border-color: var(--red); }
+  .ds-pips { display: flex; gap: 4px; }
+
+  /* add form */
+  .add-form { background: var(--bg2); border: .5px solid var(--border); border-radius: var(--radius-lg); padding: 10px 14px; margin-bottom: 10px; }
+  .frow { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-bottom: 6px; }
+  .frow label { font-size: 11px; color: var(--text2); }
+  .frow input[type=text] { font-size: 12px; padding: 3px 7px; border-radius: var(--radius); border: .5px solid var(--border2); background: var(--bg); color: var(--text); width: 130px; }
+  .frow input[type=number] { font-size: 12px; padding: 3px 7px; border-radius: var(--radius); border: .5px solid var(--border2); background: var(--bg); color: var(--text); width: 60px; }
+  .frow button, .ibtn { font-size: 12px; padding: 4px 12px; border-radius: var(--radius); border: .5px solid var(--blue); color: var(--blue-text); background: var(--blue-bg); cursor: pointer; }
+  .frow button:hover, .ibtn:hover { background: #b5d4f4; }
+
+  /* log */
+  .log { background: var(--bg2); border-radius: var(--radius); padding: 8px 12px; font-size: 11px; color: var(--text2); line-height: 1.7; max-height: 90px; overflow-y: auto; }
+  .log p { margin: 0; }
+  .ldmg { color: var(--red); }
+  .lheal { color: var(--green); }
+  .lhero { color: var(--text); font-weight: 500; }
+  .lrest { color: var(--blue); }
+
+  /* bottom buttons */
+  .btn-row { display: flex; gap: 8px; margin-top: 10px; flex-wrap: wrap; }
+  .btn-row button { font-size: 12px; padding: 5px 12px; border-radius: var(--radius); border: .5px solid var(--border2); background: var(--bg); color: var(--text); cursor: pointer; }
+  .btn-row button:hover { background: var(--bg2); }
+  .btn-row button.pri { border-color: var(--blue); color: var(--blue-text); }
+  .btn-row button.rest-short { border-color: var(--amber); color: var(--warn-text); background: var(--warn-bg); }
+  .btn-row button.rest-short:hover { background: #f0ddb5; }
+  .btn-row button.rest-long { border-color: var(--green); color: #085041; background: #e1f5ee; }
+  .btn-row button.rest-long:hover { background: #c0e8d8; }
+  .tog-btn { font-size: 11px; padding: 2px 9px; border-radius: var(--radius); border: .5px solid var(--border); background: var(--bg); color: var(--text2); cursor: pointer; }
+  .tog-btn:hover { background: var(--bg2); }
+
+  /* ── MOBILE RESPONSIVE ────────────────────────────────────────── */
+  @media (max-width: 700px) {
+    body { font-size: 14px; }
+    #hud-screen { padding: 8px 10px; }
+
+    /* Turn banner bigger touch */
+    .turn-name { font-size: 16px; }
+
+    /* Hero row: stack into 2×2 grid on mobile */
+    .hero-row {
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+    /* Col1 (HP/conditions) + Col2 (abilities) on first row */
+    /* Col3 (attacks/resources) + Col4 (spells) on second row */
+    /* Each col takes full width of its cell */
+
+    /* Abilities col: tighter */
+    .ability-row { padding-bottom: 2px; margin-bottom: 2px; }
+    .ability-skills span { display: inline; }
+    .ability-skills span::after { content: "  "; }
+
+    /* Spell items: slightly larger tap targets */
+    .spell-item { line-height: 2; }
+    .spell-item input[type=checkbox] { width: 16px; height: 16px; }
+
+    /* HP controls: bigger */
+    .pm-btn { width: 34px; height: 34px; font-size: 20px; }
+    .hp-ctrl input { width: 52px; font-size: 14px; padding: 4px 6px; }
+    .hp-num { font-size: 26px; }
+
+    /* Monster grid: 1 column */
+    .monster-grid { grid-template-columns: 1fr; }
+
+    /* Init table: hide bonus column, keep name+result */
+    .init-table th:nth-child(3),
+    .init-table td:nth-child(3) { display: none; }
+
+    /* Buttons: full-width on mobile */
+    .btn-row { flex-direction: column; gap: 6px; }
+    .btn-row button { width: 100%; padding: 10px 12px; font-size: 14px; text-align: center; }
+
+    /* Condition select bigger */
+    .cond-select { font-size: 13px; padding: 5px 8px; }
+
+    /* Add form inputs: full row */
+    .frow { flex-direction: column; align-items: stretch; gap: 6px; }
+    .frow label { font-size: 13px; margin-bottom: -2px; }
+    .frow input[type=text] { width: 100%; font-size: 14px; padding: 6px 10px; }
+    .frow input[type=number] { width: 100%; font-size: 14px; padding: 6px 10px; }
+    .frow button { width: 100%; padding: 8px; font-size: 14px; }
+
+    /* Stat block bigger */
+    .stat-block-field { font-size: 13px; min-height: 60px; }
+    .fmt-btn { padding: 4px 12px; font-size: 13px; }
+
+    /* Log bigger */
+    .log { font-size: 12px; max-height: 110px; }
+
+    /* slabel */
+    .slabel { font-size: 12px; margin: 14px 0 8px; }
+
+    /* blabel */
+    .blabel { font-size: 11px; }
+
+    /* Tags: bigger tap area */
+    .ctag { font-size: 11px; padding: 4px 10px; }
+    .rtag, .hitag, .cres-tag { font-size: 11px; padding: 4px 10px; }
+
+    /* Selection screen */
+    .char-grid { grid-template-columns: 1fr; }
+    .char-card { padding: 14px 16px; }
+    .char-card .cn { font-size: 16px; }
+    .char-card .cs { font-size: 13px; }
+    .start-btn { width: 100%; padding: 12px; font-size: 16px; }
+  }
+
+  @media (max-width: 420px) {
+    /* Very narrow phones: hero row fully single column */
+    .hero-row { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<div id="select-screen">
+  <h1>Dragon of Icespire Peak</h1>
+  <p>Обери персонажів для участі в бою</p>
+  <div class="char-grid" id="char-grid"></div>
+  <button class="start-btn" id="start-btn" disabled onclick="startCombat()">Почати бій →</button>
+</div>
+
+<div id="hud-screen">
+  <div id="app"></div>
+</div>
+
+<script>
+// ── CHARACTER DATA ─────────────────────────────────────────────────────────────
+
+const ALL_CHARACTERS = [
+  {
+    id: "luffi", name: "Луффі", sub: "Паладин 4", initBonus: "DEX +0",
+    hp: 28, maxHp: 28, ac: 17, initiative: 0, spellDC: 13,
+    profBonus: 2,
+    abilities: {STR:14,DEX:11,CON:11,INT:12,WIS:9,CHA:16},
+    saveProficiencies: ["WIS","CHA"],
+    skillProficiencies: {
+      "Athletics":      {stat:"STR", type:"prof"},
+      "Religion":       {stat:"INT", type:"prof"},
+      "Insight":        {stat:"WIS", type:"prof"},
+      "Persuasion":     {stat:"CHA", type:"prof"}
+    },
+    attacks: [
+      {name:"Longsword +1", bonus:"+5", dmg:"1d8+3", type:"Рубляча", note:"Versatile 1d10+3 · Mastery: Sap — влучання → ціль має Disadv. на наст. d20"},
+      {name:"Breath Weapon", bonus:"КС 13 DEX", dmg:"1d10", type:"Блискавка", note:"конус 15фт або лінія 30×5фт · 2/LR"},
+      {name:"True Strike", bonus:"+5", dmg:"1d8+3", type:"Рад./зброї", note:"кантріп · замість STR/DEX"},
+      {name:"Javelin", bonus:"+4", dmg:"1d6+2", type:"Колюча", note:"Метальна 30/120фт · Mastery: Slow — влучання → ціль −10фт швидк."}
+    ],
+    // Spellcasting: Paladin prepares spells. Limit = 5 (Oath + Guiding Bolt don't count)
+    spellcasting: {
+      type: "prepared",
+      preparedLimit: 5,
+      alwaysPreparedNote: "Oath, Guiding Bolt та Divine Smite не входять в ліміт"
+    },
+    spells: [
+      // Cantrips (Magic Initiate — always)
+      {name:"Light",        nameUa:"Світло",               lvl:0, tag:"always"},
+      {name:"True Strike",  nameUa:"Вірний Удар",          lvl:0, tag:"magic-init"},
+      // Oath — always prepared, не в ліміт
+      {name:"Bane",         nameUa:"Прокляття",            lvl:1, tag:"oath", isConc:true},
+      {name:"Hunter's Mark",nameUa:"Мітка Мисливця",       lvl:1, tag:"oath", isConc:true, isBA:true},
+      // Always prepared (class feature / feat)
+      {name:"Guiding Bolt", nameUa:"Промінь-Провідник",    lvl:1, tag:"magic-init"},
+      {name:"Divine Smite", nameUa:"Божественний Удар",    lvl:1, tag:"always"},
+      // Paladin spell list lvl 1 — preparable
+      {name:"Bless",             nameUa:"Благословення",      lvl:1, tag:"prep", defaultPrepared:true},
+      {name:"Command",           nameUa:"Наказ",              lvl:1, tag:"prep", defaultPrepared:false},
+      {name:"Compelled Duel",    nameUa:"Вимушений Дуель",    lvl:1, tag:"prep", defaultPrepared:true, isConc:true},
+      {name:"Cure Wounds",       nameUa:"Зцілення Ран",       lvl:1, tag:"prep", defaultPrepared:true},
+      {name:"Detect Evil and Good",nameUa:"Виявити Зло та Добро",lvl:1, tag:"prep", defaultPrepared:false, isConc:true},
+      {name:"Detect Magic",      nameUa:"Виявити Магію",      lvl:1, tag:"prep", defaultPrepared:false, isConc:true},
+      {name:"Detect Poison and Disease",nameUa:"Виявити Отруту та Хворобу",lvl:1, tag:"prep", defaultPrepared:false, isConc:true},
+      {name:"Divine Favor",      nameUa:"Божественна Прихильність",lvl:1, tag:"prep", defaultPrepared:false, isConc:true},
+      {name:"Heroism",           nameUa:"Героїзм",            lvl:1, tag:"prep", defaultPrepared:false, isConc:true},
+      {name:"Protection from Evil and Good",nameUa:"Захист від Зла та Добра",lvl:1, tag:"prep", defaultPrepared:false},
+      {name:"Purify Food and Drink",nameUa:"Очистити Їжу та Питво",lvl:1, tag:"prep", defaultPrepared:false},
+      {name:"Searing Smite",     nameUa:"Палаючий Удар",      lvl:1, tag:"prep", defaultPrepared:true, isConc:true, isBA:true},
+      {name:"Shield of Faith",   nameUa:"Щит Віри",           lvl:1, tag:"prep", defaultPrepared:true, isConc:true, isBA:true},
+      {name:"Wrathful Smite",    nameUa:"Гнівний Удар",       lvl:1, tag:"prep", defaultPrepared:false, isConc:true, isBA:true},
+    ],
+    resources: [
+      {id:"smite",label:"Free Smite"},
+      {id:"gb",label:"Guiding Bolt (безк.)"}
+    ],
+    cdOptions: ["Divine Sense — Celestials/Fiends/Undead в 60фт, 10хв (бонусна дія)", "Vow of Enmity — Advantage на атаки проти цілі в 30фт, 1хв (при Attack action)"],
+    shortRestRestores: { resources:[], counters:[{id:"cd", amount:1}] },
+    longRestRestores: "all",
+    counters: [
+      {id:"slot1", label:"Slot 1 (1рів)", max:3, step:1},
+      {id:"cd",    label:"Channel Div.",  max:2, step:1},
+      {id:"br",    label:"Breath Wpn",    max:2, step:1},
+      {id:"loh",   label:"Lay on Hands",  max:20, step:1}
+    ]
+  },
+  {
+    id: "potuzhniy", name: "Потужній", sub: "Чарівник 4", initBonus: "DEX +1",
+    hp: 23, maxHp: 23, ac: 11, initiative: 0, spellDC: 15,
+    profBonus: 2,
+    abilities: {STR:8,DEX:12,CON:12,INT:20,WIS:10,CHA:10},
+    saveProficiencies: ["INT","WIS"],
+    skillProficiencies: {
+      "Acrobatics":     {stat:"DEX", type:"prof"},
+      "Stealth":        {stat:"DEX", type:"prof"},
+      "Arcana":         {stat:"INT", type:"prof"},
+      "History":        {stat:"INT", type:"prof"},
+      "Investigation":  {stat:"INT", type:"expert"},
+      "Survival":       {stat:"WIS", type:"prof"},
+      "Persuasion":     {stat:"CHA", type:"prof"}
+    },
+    attacks: [
+      {name:"Ray of Frost", bonus:"+7", dmg:"1d8", type:"Холод", note:"60фт · −10фт швидк. · промах=½ (Potent)"},
+      {name:"Shocking Grasp", bonus:"+7", dmg:"1d8", type:"Блискавка", note:"дотик · без реакції · промах=½ (Potent)"},
+      {name:"Quarterstaff", bonus:"+1", dmg:"1d6-1", type:"Дроблення", note:"Versatile 1d8-1 · Simple weapon"},
+      {name:"Dagger", bonus:"+3", dmg:"1d4+1", type:"Колюча", note:"Фінесс · Метальна 20/60фт"}
+    ],
+    spellcasting: {
+      type: "prepared",
+      preparedLimit: 7,
+      alwaysPreparedNote: "Ритуали ✦ можна кастувати без підготовки (з книги, +10 хв)"
+    },
+    spells: [
+      // Cantrips — always
+      {name:"Friends",       nameUa:"Друзі",          lvl:0, tag:"always", isConc:true},
+      {name:"Mage Hand",     nameUa:"Рука Мага",      lvl:0, tag:"always"},
+      {name:"Ray of Frost",  nameUa:"Промінь Холоду", lvl:0, tag:"always"},
+      {name:"Shocking Grasp",nameUa:"Удар Струмом",   lvl:0, tag:"always"},
+      // Spellbook — preparable (rituals can also be cast without preparing)
+      {name:"Burning Hands",     nameUa:"Палаючі Руки",          lvl:1, tag:"prep", defaultPrepared:false},
+      {name:"Detect Magic",      nameUa:"Виявити Магію",         lvl:1, tag:"prep", defaultPrepared:false, isRitual:true, isConc:true},
+      {name:"Disguise Self",     nameUa:"Самомаскування",        lvl:1, tag:"prep", defaultPrepared:true},
+      {name:"Feather Fall",      nameUa:"Пір'яне Падіння",       lvl:1, tag:"prep", defaultPrepared:false},
+      {name:"Identify",          nameUa:"Ідентифікація",         lvl:1, tag:"prep", defaultPrepared:false, isRitual:true},
+      {name:"Mage Armor",        nameUa:"Магічна Броня",         lvl:1, tag:"prep", defaultPrepared:true},
+      {name:"Magic Missile",     nameUa:"Магічна Стріла",        lvl:1, tag:"prep", defaultPrepared:true},
+      {name:"Shield",            nameUa:"Щит",                   lvl:1, tag:"prep", defaultPrepared:false},
+      {name:"Sleep",             nameUa:"Сон",                   lvl:1, tag:"prep", defaultPrepared:false},
+      {name:"Thunderwave",       nameUa:"Громова Хвиля",         lvl:1, tag:"prep", defaultPrepared:true},
+      {name:"Witch Bolt",        nameUa:"Відьомський Болт",      lvl:1, tag:"prep", defaultPrepared:true, isConc:true},
+      {name:"Darkness",          nameUa:"Темрява",               lvl:2, tag:"prep", defaultPrepared:true, isConc:true},
+      {name:"Gust of Wind",      nameUa:"Пориви Вітру",          lvl:2, tag:"prep", defaultPrepared:false, isConc:true},
+      {name:"Melf's Acid Arrow", nameUa:"Кислотна Стріла Мелфа", lvl:2, tag:"prep", defaultPrepared:true},
+    ],
+    resources: [
+      {id:"arc",label:"Arcane Recovery"}
+    ],
+    shortRestRestores: { resources:[], counters:[] },
+    longRestRestores: "all",
+    counters: [
+      {id:"slot1",  label:"Slot 1 (1рів)", max:4, step:1},
+      {id:"slot2",  label:"Slot 2 (2рів)", max:3, step:1},
+      {id:"lucky",  label:"Lucky",          max:2, step:1}
+    ]
+  },
+  {
+    id: "adolf", name: "Адольф", sub: "Бард 4 (CoS)", initBonus: "DEX +3",
+    hp: 29, maxHp: 29, ac: 15, initiative: 0, spellDC: 14,
+    profBonus: 2, jackOfAllTrades: true,
+    abilities: {STR:8,DEX:16,CON:14,INT:10,WIS:10,CHA:18},
+    saveProficiencies: ["DEX","CHA"],
+    skillProficiencies: {
+      "Deception":      {stat:"CHA", type:"expert"},
+      "Intimidation":   {stat:"CHA", type:"expert"},
+      "Acrobatics":     {stat:"DEX", type:"prof"},
+      "Performance":    {stat:"CHA", type:"prof"},
+      "Stealth":        {stat:"DEX", type:"prof"}
+    },
+    attacks: [
+      {name:"Rapier (Dueling)", bonus:"+5", dmg:"1d8+5", type:"Колюча", note:"DEX+3 + Dueling+2"},
+      {name:"Rapier + Def. Flourish", bonus:"+5", dmg:"1d8+1d6+5", type:"Колюча", note:"Bardic Insp: +1d6 шкоди + +1d6 AC до наст. ходу"},
+      {name:"Rapier + Slash. Flourish", bonus:"+5", dmg:"1d8+1d6+5", type:"Колюча", note:"Bardic Insp: +1d6 цілі + та ж 1d6 ін. істоті в 5фт"},
+      {name:"Rapier + Mob. Flourish", bonus:"+5", dmg:"1d8+1d6+5", type:"Колюча", note:"Bardic Insp: +1d6 + відкинути 5d6фт + рух до неї"},
+      {name:"Dagger", bonus:"+5", dmg:"1d4+3", type:"Колюча", note:"Фінесс · Метальна 20/60фт"},
+      {name:"Vicious Mockery", bonus:"КС 14 WIS", dmg:"1d6", type:"Психічна", note:"60фт · кантріп · Disadv. на наст. атаку цілі"}
+    ],
+    spellcasting: {
+      type: "known",
+    },
+    spells: [
+      // Cantrips — always
+      {name:"Friends",          nameUa:"Друзі",               lvl:0, tag:"always", isConc:true},
+      {name:"Minor Illusion",   nameUa:"Дрібна Ілюзія",       lvl:0, tag:"always"},
+      {name:"Vicious Mockery",  nameUa:"Злобна Насмішка",     lvl:0, tag:"always"},
+      {name:"Thaumaturgy",      nameUa:"Теургія",             lvl:0, tag:"racial"},
+      // Known spells
+      {name:"Dissonant Whispers", nameUa:"Дисонуючий Шепіт",  lvl:1, tag:"known"},
+      {name:"Disguise Self",      nameUa:"Самомаскування",     lvl:1, tag:"known"},
+      {name:"Healing Word",       nameUa:"Зцілюче Слово",      lvl:1, tag:"known", isBA:true},
+      {name:"Sleep",              nameUa:"Сон",                lvl:1, tag:"known"},
+      {name:"Enhance Ability",    nameUa:"Посилити Здібність", lvl:2, tag:"known", isConc:true},
+      {name:"Knock",              nameUa:"Відчинити",          lvl:2, tag:"known"},
+      {name:"Shatter",            nameUa:"Розтрощити",         lvl:2, tag:"known"},
+      // Racial innate (1/day)
+      {name:"Hellish Rebuke",     nameUa:"Пекельна Відплата",  lvl:2, tag:"racial"},
+    ],
+    resources: [
+      {id:"hr",label:"Hellish Rebuke (1/день)"}
+    ],
+    shortRestRestores: { resources:[], counters:[] },
+    longRestRestores: "all",
+    counters: [
+      {id:"slot1", label:"Slot 1 (1рів)",  max:4, step:1},
+      {id:"slot2", label:"Slot 2 (2рів)",  max:3, step:1},
+      {id:"bi",    label:"Bardic Insp.",    max:4, step:1}
+    ]
+  },
+  {
+    id: "shtrebis", name: "☠ Штребіс", sub: "Варлок 4 — загинув", initBonus: "DEX +2",
+    dead: true,
+    hp: 0, maxHp: 27, ac: 14, initiative: 0, spellDC: 14,
+    profBonus: 2,
+    abilities: {STR:8,DEX:15,CON:13,INT:10,WIS:12,CHA:19},
+    saveProficiencies: ["WIS","CHA"],
+    skillProficiencies: {
+      "Intimidation":   {stat:"CHA", type:"prof"},
+      "Deception":      {stat:"CHA", type:"prof"}
+    },
+    attacks: [
+      {name:"Eldritch Blast", bonus:"+6", dmg:"1d10+4", type:"Force", note:"120фт · кантріп"},
+      {name:"Pact Blade", bonus:"+6", dmg:"1d8+4", type:"на вибір", note:"CHA · Necr/Psych/Rad"}
+    ],
+    spellcasting: { type: "known" },
+    spells: [
+      {name:"Eldritch Blast", nameUa:"Містичний Удар", lvl:0, tag:"always"},
+      {name:"Prestidigitation", nameUa:"Маніпуляція", lvl:0, tag:"always"},
+      {name:"Disguise Self", nameUa:"Самомаскування", lvl:0, tag:"always"},
+      {name:"Calm Emotions", nameUa:"Заспокоїти Емоції", lvl:2, tag:"patron", isConc:true},
+      {name:"Faerie Fire", nameUa:"Феєрична Пожежа", lvl:1, tag:"patron", isConc:true},
+      {name:"Misty Step", nameUa:"Туманний Крок", lvl:2, tag:"patron", isBA:true},
+      {name:"Phantasmal Force", nameUa:"Фантомна Сила", lvl:2, tag:"patron", isConc:true},
+      {name:"Sleep", nameUa:"Сон", lvl:1, tag:"patron"},
+      {name:"Arms of Hadar", nameUa:"Руки Хадара", lvl:1, tag:"known"},
+      {name:"Charm Person", nameUa:"Зачарувати Людину", lvl:1, tag:"known"},
+      {name:"Crown of Madness", nameUa:"Корона Безумства", lvl:2, tag:"known", isConc:true},
+      {name:"Hellish Rebuke", nameUa:"Пекельна Відплата", lvl:1, tag:"known"},
+      {name:"Hex", nameUa:"Гекс / Прокляття", lvl:1, tag:"known", isConc:true, isBA:true},
+    ],
+    resources: [{id:"mc",label:"Magical Cunning"}],
+    shortRestRestores: { resources:[], counters:[] },
+    longRestRestores: "all",
+    counters: [
+      {id:"pact",  label:"Slot 2рів (Pact)", max:2, step:1},
+      {id:"misty", label:"Misty Step",        max:4, step:1},
+      {id:"fury",  label:"Fury/Small",         max:2, step:1}
+    ]
+  }
+];
+
+const ABILITY_NAMES = {STR:"Сила (STR)",DEX:"Спритн. (DEX)",CON:"Витрив. (CON)",INT:"Інтел. (INT)",WIS:"Мудрість (WIS)",CHA:"Харизма (CHA)"};
+const ABILITY_SHORT = {STR:"STR",DEX:"DEX",CON:"CON",INT:"INT",WIS:"WIS",CHA:"CHA"};
+
+const ALL_SKILLS = [
+  {name:"Acrobatics",     ua:"Акробатика",    stat:"DEX"},
+  {name:"Animal Handling",ua:"Догляд за тваринами",stat:"WIS"},
+  {name:"Arcana",         ua:"Аркана",        stat:"INT"},
+  {name:"Athletics",      ua:"Атлетика",      stat:"STR"},
+  {name:"Deception",      ua:"Обман",         stat:"CHA"},
+  {name:"History",        ua:"Історія",       stat:"INT"},
+  {name:"Insight",        ua:"Прозорливість", stat:"WIS"},
+  {name:"Intimidation",   ua:"Залякування",   stat:"CHA"},
+  {name:"Investigation",  ua:"Розслідування", stat:"INT"},
+  {name:"Medicine",       ua:"Медицина",      stat:"WIS"},
+  {name:"Nature",         ua:"Природа",       stat:"INT"},
+  {name:"Perception",     ua:"Сприйняття",    stat:"WIS"},
+  {name:"Performance",    ua:"Виступ",        stat:"CHA"},
+  {name:"Persuasion",     ua:"Переконливість",stat:"CHA"},
+  {name:"Religion",       ua:"Релігія",       stat:"INT"},
+  {name:"Sleight of Hand",ua:"Спритні руки",  stat:"DEX"},
+  {name:"Stealth",        ua:"Непомітність",  stat:"DEX"},
+  {name:"Survival",       ua:"Виживання",     stat:"WIS"},
+];
+
+const CONDITIONS = [
+  "Blind (Сліпий)","Charmed (Зачарований)","Deafened (Оглухлий)","Exhaustion (Виснаження)",
+  "Frightened (Наляканий)","Grappled (Схоплений)","Incapacitated (Недієздатний)",
+  "Invisible (Невидимий)","Paralyzed (Паралізований)","Petrified (Скам'янілий)",
+  "Poisoned (Отруєний)","Prone (Лежачий)","Restrained (Обмежений)",
+  "Stunned (Приголомшений)","Unconscious (Непритомний)",
+  "Concentration","Hexed","Hunter's Mark","Blessed (Bless)"
+];
+
+// Spell effects from party spells that can linger on monsters
+// format: { label, caster, note }
+const SPELL_EFFECTS = [
+  // ── Луффі (Паладин) ──
+  { label:"Bane (Дисадв. атаки+saves)", caster:"Луффі", note:"Conc. 1хв · WIS save щоходу" },
+  { label:"Hunter's Mark (+1d6 dmg)", caster:"Луффі", note:"Conc. 1год · маркована ціль" },
+  { label:"Compelled Duel (не атак. інших)", caster:"Луффі", note:"Conc. 1хв · WIS save щоходу" },
+  { label:"Searing Smite (🔥 щоходу)", caster:"Луффі", note:"Conc. 1хв · CON save = кінець; ціль горить" },
+  { label:"Wrathful Smite (Frightened)", caster:"Луффі", note:"Conc. 1хв · WIS save = кінець" },
+  { label:"Shield of Faith (+2 AC)", caster:"Луффі", note:"Conc. 10хв · на союзника (нагадування)" },
+  { label:"Slow (−10фт, −1 AC, Disadv.)", caster:"Луффі/Breath", note:"Breath Weapon ефект" },
+  // ── Потужній (Маг) ──
+  { label:"Witch Bolt (⚡ щоходу Conc.)", caster:"Потужній", note:"Conc. 1хв · до 60фт · 1d12 авто щоходу" },
+  { label:"Darkness (сфера темряви)", caster:"Потужній", note:"Conc. 10хв · сфера 15фт · Blind всередині" },
+  { label:"Melf's Acid Arrow (кислота)", caster:"Потужній", note:"2d4 Acid наприкінці наст. ходу" },
+  { label:"Ray of Frost (−10фт швидк.)", caster:"Потужній", note:"До кінця наст. ходу Потужного" },
+  { label:"Friends (Charmed, потім злий)", caster:"Потужній", note:"Conc. 1хв · WIS save" },
+  // ── Адольф (Бард) ──
+  { label:"Vicious Mockery (Disadv. атаку)", caster:"Адольф", note:"До кінця наст. ходу Адольфа" },
+  { label:"Dissonant Whispers (Frightened)", caster:"Адольф", note:"WIS save; move away як реакція" },
+  { label:"Crown of Madness (Charmed, атак. вказаного)", caster:"Адольф", note:"Conc. 1хв · WIS save щоходу" },
+  { label:"Enhance Ability (Adv. перевірок)", caster:"Адольф", note:"Conc. 1год · різні варіанти" },
+  { label:"Shatter (Thunder, глохне)", caster:"Адольф", note:"Неорганіка — Disadv. · 1 раунд" },
+  // ── Штребіс (Варлок) ──
+  { label:"Hex (+1d6 Necrotic, Disadv.хар-ки)", caster:"Штребіс", note:"Conc. 1год · на ціль" },
+  { label:"Faerie Fire (Adv. проти, не Invis.)", caster:"Штребіс", note:"Conc. 1хв · DEX save · ціль світиться" },
+  { label:"Phantasmal Force (2d8 Psych. щоходу)", caster:"Штребіс", note:"Conc. 1хв · INT save щоходу" },
+  { label:"Sleep (Unconscious)", caster:"Штребіс", note:"Conc. 1хв · WIS save; найслабкіші першими" },
+  { label:"Charm Person (Charmed, ставить. як друга)", caster:"Штребіс", note:"WIS save · Disadv. у бою · 1год" },
+  { label:"Crown of Madness (Charmed, атак. вказаного)", caster:"Штребіс", note:"Conc. 1хв · WIS save щоходу" },
+  { label:"Calm Emotions (байдужість до ворогів)", caster:"Штребіс", note:"Conc. 1хв · CHA save" },
+];
+
+function buildCondOpts(forMonster) {
+  const baseOpts = CONDITIONS.map(c=>`<option value="${c}">${c}</option>`).join('');
+  if(!forMonster) return `<option value="">+ стан...</option>${baseOpts}`;
+  // Group spell effects by caster
+  const casters = [...new Set(SPELL_EFFECTS.map(e=>e.caster))];
+  const spellOptGroups = casters.map(caster => {
+    const opts = SPELL_EFFECTS.filter(e=>e.caster===caster).map(e =>
+      `<option value="${e.label}" title="${e.note}">${e.label}</option>`
+    ).join('');
+    return `<optgroup label="✨ ${caster}">${opts}</optgroup>`;
+  }).join('');
+  return `<option value="">+ стан / ефект заклинання...</option>
+    <optgroup label="── Стандартні стани ──">${baseOpts}</optgroup>
+    ${spellOptGroups}`;
+}
+
+const COND_OPTS = CONDITIONS.map(c=>`<option value="${c}">${c}</option>`).join('');
+
+function mod(score) { return Math.floor((score-10)/2); }
+function modStr(score) { const m=mod(score); return (m>=0?"+":"")+m; }
+
+// ── SELECTION ─────────────────────────────────────────────────────────────────
+
+let selected = new Set();
+
+function buildSelectionScreen() {
+  const grid = document.getElementById('char-grid');
+  grid.innerHTML = ALL_CHARACTERS.map(c => {
+    if(c.dead) return `
+    <div class="char-card" id="card-${c.id}" style="opacity:.4;cursor:not-allowed;pointer-events:none;">
+      <div class="cn" style="color:var(--red)">${c.name}</div>
+      <div class="cs">${c.sub}</div>
+      <div class="cstats"><span style="color:var(--red)">Загинув</span></div>
+    </div>`;
+    return `
+    <div class="char-card" id="card-${c.id}" onclick="toggleSelect('${c.id}')">
+      <div class="cn">${c.name}</div>
+      <div class="cs">${c.sub}</div>
+      <div class="cstats">
+        <span>HP ${c.maxHp}</span>
+        <span>AC ${c.ac}</span>
+        <span>КС ${c.spellDC}</span>
+        <span>Init ${c.initBonus}</span>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function toggleSelect(id) {
+  if (selected.has(id)) { selected.delete(id); document.getElementById('card-'+id).classList.remove('selected'); }
+  else { selected.add(id); document.getElementById('card-'+id).classList.add('selected'); }
+  document.getElementById('start-btn').disabled = selected.size === 0;
+}
+
+// ── COMBAT STATE ──────────────────────────────────────────────────────────────
+
+let S = { round:1, currentIdx:0, showForm:false, log:[], used:{}, counters:{}, prepared:{}, combatants:[], editingMonster:null, deathSaves:{} };
+
+function startCombat() {
+  S.combatants = ALL_CHARACTERS
+    .filter(c => selected.has(c.id))
+    .map(c => ({...JSON.parse(JSON.stringify(c)), type:'hero', conditions:[]}));
+  // Init default prepared spells
+  S.combatants.forEach(c => {
+    if (c.spellcasting && c.spellcasting.type === 'prepared') {
+      c.spells.forEach(sp => {
+        if (sp.tag === 'prep') {
+          S.prepared[c.id+'_'+sp.name] = sp.defaultPrepared ? true : false;
+        }
+      });
+    }
+  });
+  // HI absent by default — player marks when received
+  S.combatants.forEach(c => { if(c.type==='hero') S.used['HI_'+c.id] = true; });
+  S.log = ["Бій почався. Введіть ініціативу та починайте!"];
+  document.getElementById('select-screen').style.display = 'none';
+  document.getElementById('hud-screen').style.display = 'block';
+  render();
+}
+
+// ── HELPERS ───────────────────────────────────────────────────────────────────
+
+function sorted() { return [...S.combatants].sort((a,b) => b.initiative - a.initiative); }
+function cur() { const s = sorted(); return s[S.currentIdx] || s[0]; }
+function hpCol(hp, max) { const p = hp/max; return p>.6 ? "#1d9e75" : p>.3 ? "#ba7517" : "#e24b4a"; }
+function addLog(msg, cls) { S.log.push(`<span class="${cls||''}">${msg}</span>`); if(S.log.length>30) S.log.shift(); }
+
+function nextTurn() {
+  const s = sorted(); let n = S.currentIdx, t = 0;
+  do { n = (n+1)%s.length; if(n===0) S.round++; t++; } while(s[n].hp<=0 && t<s.length);
+  S.currentIdx = n;
+  addLog(`— Раунд ${S.round}, хід: ${cur().name} —`, 'lhero');
+  render();
+}
+function setInit(id, v) { const c = S.combatants.find(x=>x.id===id); if(c) { c.initiative = parseInt(v)||0; render(); } }
+function changeHp(id, d) {
+  const c = S.combatants.find(x=>x.id===id); if(!c) return;
+  c.hp = Math.max(0, Math.min(c.maxHp, c.hp+d));
+  addLog(d<0 ? `${c.name} −${Math.abs(d)} HP → ${c.hp}/${c.maxHp}` : `${c.name} +${d} HP → ${c.hp}/${c.maxHp}`, d<0?'ldmg':'lheal');
+  render();
+}
+function applyHp(id, sign) {
+  const inp = document.getElementById('hi_'+id); if(!inp) return;
+  const v = parseInt(inp.value); if(!isNaN(v) && v>0) { changeHp(id, sign*v); inp.value=''; }
+}
+function getCounter(cid, rid, max) { const k=cid+'_ctr_'+rid; if(S.counters[k]===undefined) S.counters[k]=max; return S.counters[k]; }
+function tickCounter(cid, rid, max, step) {
+  const k = cid+'_ctr_'+rid;
+  if(S.counters[k]===undefined) S.counters[k]=max;
+  S.counters[k] = S.counters[k]<=0 ? max : Math.max(0, S.counters[k]-step);
+  render();
+}
+function toggleRes(cid, rid) { const k=cid+'_'+rid; S.used[k]=!S.used[k]; render(); }
+function toggleHI(id) { S.used['HI_'+id]=!S.used['HI_'+id]; render(); }
+function addCond(id, val) {
+  if(!val) return;
+  const c = S.combatants.find(x=>x.id===id);
+  if(!c.conditions.includes(val)) c.conditions.push(val);
+  const sel = document.getElementById('cs_'+id); if(sel) sel.value='';
+  render();
+}
+function remCond(id, i) { S.combatants.find(x=>x.id===id).conditions.splice(i,1); render(); }
+
+function tickDeathSave(id, type) {
+  const key = id+'_'+type;
+  const cur = S.deathSaves[key] || 0;
+  S.deathSaves[key] = cur >= 3 ? 0 : cur + 1;
+  const s = S.deathSaves[id+'_s']||0, f = S.deathSaves[id+'_f']||0;
+  const c = S.combatants.find(x=>x.id===id);
+  if(s>=3) addLog(`${c?c.name:'?'} стабілізовано! ✓✓✓`, 'lheal');
+  if(f>=3) addLog(`${c?c.name:'?'} загинув! ✗✗✗`, 'ldmg');
+  render();
+}
+
+function resetDeathSaves(id) {
+  delete S.deathSaves[id+'_s'];
+  delete S.deathSaves[id+'_f'];
+  render();
+}
+function remMonster(id) { S.combatants = S.combatants.filter(x=>x.id!==id); if(S.currentIdx>=sorted().length) S.currentIdx=0; render(); }
+
+function togglePrepared(cid, spellName) {
+  const c = S.combatants.find(x=>x.id===cid); if(!c) return;
+  const key = cid+'_'+spellName;
+  const currentlyPrepared = S.prepared[key] || false;
+  const limit = c.spellcasting.preparedLimit;
+  const sp = c.spells.find(s=>s.name===spellName);
+  const isRitual = sp && sp.isRitual;
+  const preparedCount = c.spells.filter(sp=>sp.tag==='prep' && S.prepared[cid+'_'+sp.name]).length;
+  // Rituals bypass the limit; block only non-rituals
+  if (!currentlyPrepared && preparedCount >= limit && !isRitual) {
+    const el = document.getElementById('prep_'+cid+'_'+spellName.replace(/[^a-z0-9]/gi,'_'));
+    if(el) { el.checked = false; el.style.outline='2px solid var(--red)'; setTimeout(()=>el.style.outline='',900); }
+    return;
+  }
+  S.prepared[key] = !currentlyPrepared;
+  const newCount = c.spells.filter(sp=>sp.tag==='prep' && S.prepared[cid+'_'+sp.name]).length;
+  // Update count badge
+  const countEl = document.getElementById('prep_count_'+cid);
+  if(countEl) {
+    countEl.textContent = `Підготовлено: ${newCount}/${limit}`;
+    countEl.className = 'spell-prepared-count' + (newCount > limit ? ' over' : '');
+  }
+  // Sync checkbox state
+  const chk = document.getElementById('prep_'+cid+'_'+spellName.replace(/[^a-z0-9]/gi,'_'));
+  if(chk) chk.checked = S.prepared[key];
+  // Disable all unchecked non-ritual checkboxes if at limit; rituals always stay full opacity
+  const atLimit = newCount >= limit;
+  c.spells.filter(sp=>sp.tag==='prep').forEach(sp => {
+    const sid = 'prep_'+cid+'_'+sp.name.replace(/[^a-z0-9]/gi,'_');
+    const el = document.getElementById(sid);
+    if(!el) return;
+    const shouldDisable = atLimit && !S.prepared[cid+'_'+sp.name] && !sp.isRitual;
+    el.disabled = shouldDisable;
+    const row = el.closest('.spell-item');
+    if(row) row.style.opacity = shouldDisable ? '0.4' : '1';
+  });
+}
+
+function addMonster() {
+  const name = document.getElementById('mn').value.trim();
+  const hp = parseInt(document.getElementById('mh').value)||10;
+  const init = parseInt(document.getElementById('mi').value)||0;
+  if(!name) return;
+  // Count existing monsters with the same base name for numbering
+  const baseCount = S.combatants.filter(x => x.type==='monster' && x.baseName === name).length;
+  const num = baseCount + 1;
+  S.combatants.push({
+    id:'m'+Date.now(), name, baseName: name, num, sub:'Монстр', type:'monster',
+    hp, maxHp:hp, ac:10, initiative:init, initBonus:'—', spellDC:0,
+    speed: '—', statBlock: '', infoBlock: '',
+    attacks:[], spells:[], resources:[], counters:[], conditions:[]
+  });
+  ['mn','mh','mi'].forEach(x=>{ const el=document.getElementById(x); if(el) el.value=''; });
+  addLog(`Додано: ${name} #${num}`, 'lhero');
+  render();
+}
+
+function resetCombat() {
+  if(!confirm('Скинути бій?')) return;
+  S.round=1; S.currentIdx=0; S.used={}; S.counters={};
+  S.log=["Бій скинуто."];
+  S.combatants.forEach(x=>{ x.hp=x.maxHp; x.conditions=[]; });
+  render();
+}
+
+function doShortRest() {
+  const heroes = S.combatants.filter(x=>x.type==='hero');
+  heroes.forEach(c => {
+    if (!c.shortRestRestores) return;
+    // Restore individual resources
+    c.shortRestRestores.resources.forEach(rid => {
+      S.used[c.id+'_'+rid] = false;
+    });
+    // Restore counters by amount
+    (c.shortRestRestores.counters||[]).forEach(({id, amount}) => {
+      const k = c.id+'_ctr_'+id;
+      const cr = (c.counters||[]).find(x=>x.id===id);
+      if (!cr) return;
+      if (S.counters[k] === undefined) S.counters[k] = cr.max;
+      S.counters[k] = Math.min(cr.max, S.counters[k] + amount);
+    });
+  });
+  addLog('— Короткий відпочинок (Short Rest) —', 'lrest');
+  render();
+}
+
+function doLongRest() {
+  const heroes = S.combatants.filter(x=>x.type==='hero');
+  heroes.forEach(c => {
+    c.hp = c.maxHp;
+    // reset death saves
+    delete S.deathSaves[c.id+'_s'];
+    delete S.deathSaves[c.id+'_f'];
+    // reset all resources
+    c.resources.forEach(r => { S.used[c.id+'_'+r.id] = false; });
+    S.used['HI_'+c.id] = true; // HI absent by default, earned separately
+    // reset counters
+    (c.counters||[]).forEach(cr => { delete S.counters[c.id+'_ctr_'+cr.id]; });
+  });
+  addLog('— Довгий відпочинок (Long Rest). HP та ресурси відновлено —', 'lrest');
+  render();
+}
+
+function backToSelect() {
+  if(!confirm('Повернутись до вибору персонажів?')) return;
+  document.getElementById('hud-screen').style.display='none';
+  document.getElementById('select-screen').style.display='flex';
+  selected.clear();
+  document.querySelectorAll('.char-card').forEach(c=>c.classList.remove('selected'));
+  document.getElementById('start-btn').disabled=true;
+}
+
+// ── RENDER HELPERS ────────────────────────────────────────────────────────────
+
+function renderCol1(c) {
+  const pct = Math.round(c.hp/c.maxHp*100);
+  const conds = c.conditions.map((cond,i)=>`<span class="ctag" onclick="remCond('${c.id}',${i})" title="зняти">${cond}</span>`).join('');
+
+  let deathSavesHtml = '';
+  if(c.hp <= 0) {
+    const successes = S.deathSaves[c.id+'_s'] || 0;
+    const failures  = S.deathSaves[c.id+'_f'] || 0;
+    const sPips = [0,1,2].map(i => {
+      const filled = i < successes;
+      return `<span class="ds-pip ${filled?'success':''}" onclick="tickDeathSave('${c.id}','s')" title="Успіх"></span>`;
+    }).join('');
+    const fPips = [0,1,2].map(i => {
+      const filled = i < failures;
+      return `<span class="ds-pip ${filled?'fail':''}" onclick="tickDeathSave('${c.id}','f')" title="Провал"></span>`;
+    }).join('');
+    const statusMsg = successes >= 3
+      ? `<span style="font-size:10px;color:var(--green);font-weight:500">✓ Стабілізовано</span>`
+      : failures >= 3
+      ? `<span style="font-size:10px;color:var(--red);font-weight:500">✗ Загинув</span>`
+      : '';
+    deathSavesHtml = `<div class="death-saves">
+      <div class="death-saves-title">⚰ Кидки Смерті</div>
+      <div class="death-saves-row"><span class="death-saves-label">✓ Успіхи</span><div class="ds-pips">${sPips}</div></div>
+      <div class="death-saves-row"><span class="death-saves-label">✗ Провали</span><div class="ds-pips">${fPips}</div></div>
+      ${statusMsg ? `<div style="margin-top:4px">${statusMsg}</div>` : ''}
+      <button onclick="resetDeathSaves('${c.id}')" style="margin-top:4px;font-size:10px;padding:1px 7px;border-radius:var(--radius);border:.5px solid var(--border);background:var(--bg);color:var(--text2);cursor:pointer">Скинути</button>
+    </div>`;
+  }
+
+  return `<div>
+    <div class="cname">${c.name}</div>
+    <div class="csub">${c.sub}</div>
+    <div class="acbadge">AC ${c.ac} · КС ${c.spellDC||'—'}</div>
+    <div class="hp-num">${c.hp}<span style="font-size:13px;color:var(--text2)">/${c.maxHp}</span></div>
+    <div class="hp-bar-bg"><div class="hp-bar-fill" style="width:${pct}%;background:${hpCol(c.hp,c.maxHp)}"></div></div>
+    <div class="hp-ctrl">
+      <input type="number" id="hi_${c.id}" placeholder="HP" min="1"/>
+      <button class="pm-btn" onclick="applyHp('${c.id}',-1)">−</button>
+      <button class="pm-btn" onclick="applyHp('${c.id}',1)">+</button>
+    </div>
+    ${conds ? `<div class="cond-list">${conds}</div>` : ''}
+    <select class="cond-select" id="cs_${c.id}" onchange="addCond('${c.id}',this.value)">
+      <option value="">+ стан...</option>${COND_OPTS}
+    </select>
+    ${deathSavesHtml}
+  </div>`;
+}
+
+function renderCol2Abilities(c) {
+  const ab = c.abilities;
+  const pb = c.profBonus || 2;
+  // Group ALL skills by ability
+  const skillsByAbility = {};
+  ALL_SKILLS.forEach(sk => {
+    if (!skillsByAbility[sk.stat]) skillsByAbility[sk.stat] = [];
+    skillsByAbility[sk.stat].push(sk);
+  });
+
+  const saveHtml = ['STR','DEX','CON','INT','WIS','CHA'].filter(a => c.saveProficiencies && c.saveProficiencies.includes(a)).map(a => {
+    const bonus = mod(ab[a]) + pb;
+    return `<span class="save-tag">${ABILITY_SHORT[a]} ${bonus>=0?'+':''}${bonus}</span>`;
+  }).join('');
+
+  const rows = ['STR','DEX','CON','INT','WIS','CHA'].map(a => {
+    const m = mod(ab[a]);
+    const joat = c.jackOfAllTrades; // half proficiency bonus (floor) on non-proficient skills
+    const joatBonus = joat ? Math.floor(pb / 2) : 0;
+    // Show ALL skills for this ability
+    const skillsHtml = (skillsByAbility[a]||[]).map(sk => {
+      const prof = c.skillProficiencies && c.skillProficiencies[sk.name];
+      if (prof) {
+        const bonus = m + (prof.type==='expert' ? pb*2 : pb);
+        const cls = prof.type==='expert' ? 'skill-expert' : 'skill-prof';
+        return `<span class="${cls}">${sk.ua} ${bonus>=0?'+':''}${bonus}${prof.type==='expert'?' ★':''}</span>`;
+      } else if (joat && joatBonus > 0) {
+        const bonus = m + joatBonus;
+        return `<span style="color:#7a6a00" title="Jack of All Trades (+${joatBonus})">${sk.ua} ${bonus>=0?'+':''}${bonus}</span>`;
+      } else {
+        const bonus = m;
+        return `<span style="color:var(--text3)">${sk.ua} ${bonus>=0?'+':''}${bonus}</span>`;
+      }
+    }).join('');
+    return `<div class="ability-row">
+      <div class="ability-main">
+        <span class="ability-name">${a}</span>
+        <span class="ability-score">${ab[a]} (${modStr(ab[a])})</span>
+      </div>
+      <div class="ability-skills">${skillsHtml}</div>
+    </div>`;
+  }).join('');
+
+  return `<div>
+    <div class="blabel">Характеристики та навички</div>
+    ${c.jackOfAllTrades ? `<div style="font-size:9px;color:#7a6a00;margin-bottom:4px">🟡 = Jack of All Trades (+${Math.floor((c.profBonus||2)/2)} до непроф. навичок)</div>` : ''}
+    <div class="ability-grid">${rows}</div>
+    ${saveHtml ? `<div style="margin-top:6px"><div class="blabel">Рятівні кидки</div><div class="save-prof">${saveHtml}</div></div>` : ''}
+  </div>`;
+}
+
+function spellUrl(name) {
+  // Manual map: spell name → [slug, source]
+  // source "xphb" = PHB 2024, "phb" = PHB 2014, "xge" = Xanathar's
+  const SPELL_MAP = {
+    "Arms of Hadar":                   ["arms-of-hadar",                    "phb"],
+    "Bane":                            ["bane",                             "xphb"],
+    "Bless":                           ["bless",                            "xphb"],
+    "Calm Emotions":                   ["calm-emotions",                    "xphb"],
+    "Cause Fear":                      ["cause-fear",                       "xge"],
+    "Charm Person":                    ["charm-person",                     "xphb"],
+    "Command":                         ["command",                          "xphb"],
+    "Compelled Duel":                  ["compelled-duel",                   "xphb"],
+    "Crown of Madness":                ["crown-of-madness",                 "xphb"],
+    "Cure Wounds":                     ["cure-wounds",                      "xphb"],
+    "Darkness":                        ["darkness",                         "xphb"],
+    "Detect Evil and Good":            ["detect-evil-and-good",             "xphb"],
+    "Detect Magic":                    ["detect-magic",                     "xphb"],
+    "Detect Poison and Disease":       ["detect-poison-and-disease",        "xphb"],
+    "Disguise Self":                   ["disguise-self",                    "xphb"],
+    "Dissonant Whispers":              ["dissonant-whispers",               "xphb"],
+    "Divine Favor":                    ["divine-favor",                     "xphb"],
+    "Divine Smite":                    ["divine-smite",                     "xphb"],
+    "Eldritch Blast":                  ["eldritch-blast",                   "xphb"],
+    "Enhance Ability":                 ["enhance-ability",                  "xphb"],
+    "Faerie Fire":                     ["faerie-fire",                      "xphb"],
+    "Feather Fall":                    ["feather-fall",                     "xphb"],
+    "Friends":                         ["friends",                          "xphb"],
+    "Gust of Wind":                    ["gust-of-wind",                     "xphb"],
+    "Guiding Bolt":                    ["guiding-bolt",                     "xphb"],
+    "Healing Word":                    ["healing-word",                     "xphb"],
+    "Hellish Rebuke":                  ["hellish-rebuke",                   "xphb"],
+    "Heroism":                         ["heroism",                          "xphb"],
+    "Hex":                             ["hex",                              "xphb"],
+    "Hunter's Mark":                   ["hunters-mark",                     "xphb"],
+    "Identify":                        ["identify",                         "xphb"],
+    "Knock":                           ["knock",                            "xphb"],
+    "Light":                           ["light",                            "xphb"],
+    "Mage Armor":                      ["mage-armor",                       "xphb"],
+    "Mage Hand":                       ["mage-hand",                        "xphb"],
+    "Magic Missile":                   ["magic-missile",                    "xphb"],
+    "Melf's Acid Arrow":               ["melfs-acid-arrow",                 "phb"],
+    "Minor Illusion":                  ["minor-illusion",                   "xphb"],
+    "Misty Step":                      ["misty-step",                       "xphb"],
+    "Phantasmal Force":                ["phantasmal-force",                 "xphb"],
+    "Prestidigitation":                ["prestidigitation",                 "xphb"],
+    "Protection from Evil and Good":   ["protection-from-evil-and-good",    "xphb"],
+    "Purify Food and Drink":           ["purify-food-and-drink",            "xphb"],
+    "Ray of Frost":                    ["ray-of-frost",                     "xphb"],
+    "Searing Smite":                   ["searing-smite",                    "xphb"],
+    "Shatter":                         ["shatter",                          "xphb"],
+    "Shield of Faith":                 ["shield-of-faith",                  "xphb"],
+    "Shocking Grasp":                  ["shocking-grasp",                   "xphb"],
+    "Sleep":                           ["sleep",                            "xphb"],
+    "Thaumaturgy":                     ["thaumaturgy",                      "xphb"],
+    "Thunderwave":                     ["thunderwave",                      "xphb"],
+    "True Strike":                     ["true-strike",                      "xphb"],
+    "Vicious Mockery":                 ["vicious-mockery",                  "xphb"],
+    "Witch Bolt":                      ["witch-bolt",                       "xphb"],
+    "Wrathful Smite":                  ["wrathful-smite",                   "xphb"],
+  };
+  const entry = SPELL_MAP[name];
+  if (entry) return `https://5e.tools/spells/${entry[0]}-${entry[1]}.html`;
+  // fallback: auto-slug + phb
+  const slug = name.toLowerCase()
+    .replace(/['\u2019]/g,"")
+    .replace(/[^a-z0-9]+/g,"-")
+    .replace(/-+/g,"-")
+    .replace(/^-|-$/g,"");
+  return `https://5e.tools/spells/${slug}-phb.html`;
+}
+
+function renderCol4Spells(c) {
+  if (!c.spells || !c.spells.length) return `<div><div class="blabel">Заклинання</div><span style="font-size:11px;color:var(--text2)">—</span></div>`;
+
+  const isPrepared = c.spellcasting && c.spellcasting.type === 'prepared';
+  const limit = isPrepared ? c.spellcasting.preparedLimit : null;
+
+  // Sort: level asc, within level always-prepared first, then alpha
+  const tagOrder = tag => (['always','oath','magic-init','patron','ritual','known'].includes(tag) ? 0 : 1);
+  const sorted_spells = [...c.spells].sort((a,b) => {
+    if(a.lvl !== b.lvl) return a.lvl - b.lvl;
+    const ao = tagOrder(a.tag), bo = tagOrder(b.tag);
+    if(ao !== bo) return ao - bo;
+    return a.name.localeCompare(b.name);
+  });
+
+  // Group by level
+  const byLevel = {};
+  sorted_spells.forEach(sp => {
+    if (!byLevel[sp.lvl]) byLevel[sp.lvl] = [];
+    byLevel[sp.lvl].push(sp);
+  });
+
+  const levelLabel = lvl => lvl === 0 ? 'Замовляння (0)' : `${lvl}-й рівень`;
+  const tagLabel = {oath:'клятва', 'magic-init':'mag.init.', patron:'покровитель', known:''};
+
+  let preparedCount = 0;
+  if(isPrepared) {
+    preparedCount = c.spells.filter(sp=>sp.tag==='prep' && S.prepared[c.id+'_'+sp.name]).length;
+  }
+
+  const atLimit = isPrepared && preparedCount >= limit;
+
+  const groupsHtml = Object.keys(byLevel).sort((a,b)=>+a-+b).map(lvl => {
+    const spells = byLevel[lvl];
+    const spellsHtml = spells.map(sp => {
+      const isPrep = sp.tag === 'prep';
+      const url = spellUrl(sp.name);
+      const link = `<a href="${url}" target="_blank" title="Відкрити опис">${sp.name}</a>`;
+      const ritBadge = sp.isRitual ? ` <span class="spell-meta" style="border:.5px solid #ccc;border-radius:3px;padding:0 3px;font-size:9px">R</span>` : '';
+      const concBadge = sp.isConc ? ` <span class="spell-meta" style="border:.5px solid #aab;border-radius:3px;padding:0 3px;font-size:9px;color:#557">C</span>` : '';
+      const baBadge = sp.isBA ? ` <span class="spell-meta" style="border:.5px solid #a8845a;border-radius:3px;padding:0 3px;font-size:9px;color:#7a4e1a">BA</span>` : '';
+      const tl = tagLabel[sp.tag] ? ` <span class="spell-meta" style="font-size:9px">[${tagLabel[sp.tag]}]</span>` : '';
+
+      if(isPrepared && isPrep) {
+        const key = c.id+'_'+sp.name;
+        const checked = S.prepared[key] ? 'checked' : '';
+        const safeId = 'prep_'+c.id+'_'+sp.name.replace(/[^a-z0-9]/gi,'_');
+        // Rituals are always usable even unprepared — show full opacity
+        const isRitualUnprepared = sp.isRitual && !S.prepared[key];
+        const isDisabled = (atLimit && !S.prepared[key] && !sp.isRitual) ? 'disabled' : '';
+        const rowOpacity = (isDisabled && !sp.isRitual) ? 'opacity:.4' : 'opacity:1';
+        const safeSpellName = sp.name.replace(/'/g, "\\'");
+        return `<div class="spell-item" style="${rowOpacity}">
+          <input type="checkbox" id="${safeId}" ${checked} ${isDisabled} onchange="togglePrepared('${c.id}','${safeSpellName}')"/>
+          <span class="spell-name">${link}${ritBadge}${concBadge}${baBadge}</span>
+          <span class="spell-meta">(${sp.nameUa})</span>
+        </div>`;
+      } else {
+        return `<div class="spell-item always-prepared" style="opacity:1">
+          <span class="spell-meta" style="margin-right:3px">✦</span>
+          <span class="spell-name">${link}${ritBadge}${concBadge}${baBadge}${tl}</span>
+          <span class="spell-meta">(${sp.nameUa})</span>
+        </div>`;
+      }
+    }).join('');
+
+    return `<div class="spell-lvl-group">
+      <div class="spell-lvl-header">${levelLabel(+lvl)}</div>
+      ${spellsHtml}
+    </div>`;
+  }).join('');
+
+  const countHtml = isPrepared ? `<div class="spell-prepared-count${preparedCount>limit?' over':''}" id="prep_count_${c.id}">Підготовлено: ${preparedCount}/${limit}</div>` : '';
+  const noteHtml = isPrepared && c.spellcasting.alwaysPreparedNote ? `<div style="font-size:10px;color:var(--text3);margin-bottom:4px">${c.spellcasting.alwaysPreparedNote}</div>` : '';
+
+  return `<div>
+    <div class="blabel">Заклинання</div>
+    ${countHtml}${noteHtml}
+    <div class="spell-list">${groupsHtml}</div>
+  </div>`;
+}
+
+function renderCol3AttacksResources(c) {
+  const atkRows = c.attacks.map(a=>`<div class="atk-row">
+    <div class="atk-name">${a.name}</div>
+    <div>${a.bonus} → <b>${a.dmg}</b> <span style="font-size:10px;color:var(--text2)">${a.type}${a.note?' · '+a.note:''}</span></div>
+  </div>`).join('');
+
+  const hiAbsent = S.used['HI_'+c.id] !== false; // true by default = absent
+  const hi = `<span class="hitag ${hiAbsent?'used':''}" onclick="toggleHI('${c.id}')" title="${hiAbsent?'Клікни — отримав HI':'Клікни — витратив HI'}">${hiAbsent?'HI: немає':'HI: є ✓'}</span>`;
+  const resTags = c.resources.map(r=>{
+    const used = S.used[c.id+'_'+r.id];
+    return `<span class="rtag ${used?'used':''}" onclick="toggleRes('${c.id}','${r.id}')">${r.label}</span>`;
+  }).join('');
+  const ctrTags = (c.counters||[]).map(cr=>{
+    const val = getCounter(c.id, cr.id, cr.max);
+    return `<span class="cres-tag ${val<=0?'exhausted':''}" onclick="tickCounter('${c.id}','${cr.id}',${cr.max},${cr.step})" title="${val<=0?'Клікни щоб відновити':'Клікни щоб витратити'}">${cr.label} (${val}/${cr.max})</span>`;
+  }).join('');
+
+  const cdHtml = (c.cdOptions && c.cdOptions.length) ? `
+    <div class="divider"></div>
+    <div class="blabel">Channel Divinity — опції</div>
+    <div style="font-size:10px;color:var(--text2);line-height:1.8">${c.cdOptions.map(o=>`· ${o}`).join('<br>')}</div>` : '';
+
+  return `<div>
+    <div class="blabel">Атаки та кантріпи</div>
+    ${atkRows}
+    <div class="divider"></div>
+    <div class="blabel">Ресурси</div>
+    <div class="res-wrap">${hi}${resTags}${ctrTags}</div>
+    ${cdHtml}
+  </div>`;
+}
+
+function renderHeroRow(c, isActive) {
+  return `<div class="hero-row ${isActive?'aturn':''} ${c.hp<=0?'dead':''}">
+    ${renderCol1(c)}
+    ${renderCol2Abilities(c)}
+    ${renderCol3AttacksResources(c)}
+    ${renderCol4Spells(c)}
+  </div>`;
+}
+
+function renderMonster(c, isActive) {
+  const pct = Math.round(c.hp/c.maxHp*100);
+  const isSpellEffect = cond => SPELL_EFFECTS.some(e => e.label === cond);
+  const conds = c.conditions.map((cond,i)=>{
+    const spellFx = isSpellEffect(cond);
+    const style = spellFx
+      ? 'font-size:10px;padding:2px 7px;border-radius:99px;border:.5px solid #9b59b6;color:#5b2c8d;background:#f5eaff;cursor:pointer;user-select:none'
+      : 'class="ctag"';
+    return spellFx
+      ? `<span style="${style}" onclick="remCond('${c.id}',${i})" title="${(SPELL_EFFECTS.find(e=>e.label===cond)||{}).note||''}">${cond} ✕</span>`
+      : `<span class="ctag" onclick="remCond('${c.id}',${i})">${cond}</span>`;
+  }).join('');
+  const safeId = c.id;
+  const displayName = `${c.name} <span style="color:var(--text3);font-weight:400;font-size:11px">#${c.num||1}</span>`;
+
+  const isEditing = S.editingMonster === safeId;
+
+  const editForm = isEditing ? `
+    <div class="add-form" style="margin:6px 0 4px">
+      <div class="frow" style="flex-wrap:wrap;gap:6px">
+        <div style="display:flex;gap:4px;align-items:center"><label>Назва</label><input type="text" id="em_name_${safeId}" value="${c.name.replace(/"/g,'&quot;')}" style="width:120px"/></div>
+        <div style="display:flex;gap:4px;align-items:center"><label>Max HP</label><input type="number" id="em_hp_${safeId}" value="${c.maxHp}" style="width:55px"/></div>
+        <div style="display:flex;gap:4px;align-items:center"><label>Init</label><input type="number" id="em_init_${safeId}" value="${c.initiative}" style="width:50px"/></div>
+      </div>
+      <div class="frow" style="margin-top:4px">
+        <button onclick="saveMonsterEdit('${safeId}')">Зберегти ✓</button>
+        <button onclick="S.editingMonster=null;render()" style="border-color:var(--border);color:var(--text2)">Скасувати</button>
+      </div>
+    </div>` : '';
+
+  return `<div class="mcard ${isActive?'aturn':''} ${c.hp<=0?'dead':''}">
+    <div style="display:flex;justify-content:space-between;align-items:start;margin-bottom:6px">
+      <div>
+        <div class="cname">${displayName}</div>
+        <div class="csub">${c.sub} · Init ${c.initiative}</div>
+      </div>
+      <div class="mcard-actions">
+        <button class="edit-btn" onclick="S.editingMonster=S.editingMonster==='${safeId}'?null:'${safeId}';render()">✏ ред.</button>
+        <button class="dup-btn" onclick="dupMonster('${safeId}')">⧉ копія</button>
+        <button class="rm-btn" onclick="remMonster('${safeId}')">×</button>
+      </div>
+    </div>
+    ${editForm}
+    <div class="hp-num">${c.hp}<span style="font-size:13px;color:var(--text2)">/${c.maxHp}</span></div>
+    <div class="hp-bar-bg"><div class="hp-bar-fill" style="width:${pct}%;background:${hpCol(c.hp,c.maxHp)}"></div></div>
+    <div class="hp-ctrl"><input type="number" id="hi_${safeId}" placeholder="HP" min="1"/><button class="pm-btn" onclick="applyHp('${safeId}',-1)">−</button><button class="pm-btn" onclick="applyHp('${safeId}',1)">+</button></div>
+    ${conds ? `<div class="cond-list" style="margin-top:4px">${conds}</div>` : ''}
+    <select class="cond-select" id="cs_${safeId}" onchange="addCond('${safeId}',this.value)" style="margin-top:4px">${buildCondOpts(true)}</select>
+    <div style="height:.5px;background:var(--border);margin:6px 0"></div>
+    <div class="blabel">Нотатки / Інфо</div>
+    <div class="info-block-field" id="ib_${safeId}" contenteditable="true"
+      data-placeholder="Нотатки про монстра: вразливості, здібності, тактика..."
+      onkeydown="preventFormatting(event)"
+      onpaste="handlePlainPaste(event)"
+      onblur="saveInfoBlock('${safeId}')">${c.infoBlock||''}</div>
+    <div style="height:.5px;background:var(--border);margin:6px 0"></div>
+    <div class="blabel">Stat Block / Атаки</div>
+    <div class="stat-block-field" id="sb_${safeId}" contenteditable="true" data-placeholder="Введіть текст атак, здібностей, дій монстра..."
+      onblur="saveStatBlock('${safeId}')">${c.statBlock||''}</div>
+  </div>`;
+}
+
+function saveStatBlock(id) {
+  const el = document.getElementById('sb_'+id);
+  if(!el) return;
+  const c = S.combatants.find(x=>x.id===id);
+  if(c) c.statBlock = el.innerHTML;
+}
+
+function saveInfoBlock(id) {
+  const el = document.getElementById('ib_'+id);
+  if(!el) return;
+  const c = S.combatants.find(x=>x.id===id);
+  if(c) c.infoBlock = el.innerHTML;
+}
+
+function preventFormatting(e) {
+  if ((e.ctrlKey||e.metaKey) && ['b','i','u'].includes(e.key.toLowerCase())) {
+    e.preventDefault();
+  }
+}
+
+function handlePlainPaste(e) {
+  e.preventDefault();
+  const text = (e.clipboardData||window.clipboardData).getData('text/plain');
+  document.execCommand('insertText', false, text);
+}
+
+function dupMonster(id) {
+  const src = S.combatants.find(x=>x.id===id);
+  if(!src) return;
+  const baseCount = S.combatants.filter(x => x.type==='monster' && x.baseName === src.baseName).length;
+  const newNum = baseCount + 1;
+  const copy = JSON.parse(JSON.stringify(src));
+  copy.id = 'm'+Date.now();
+  copy.num = newNum;
+  copy.hp = copy.maxHp;
+  copy.conditions = [];
+  copy.statBlock = src.statBlock;
+  copy.infoBlock = src.infoBlock;
+  S.combatants.push(copy);
+  addLog(`Копія: ${copy.name} #${copy.num}`, 'lhero');
+  render();
+}
+
+function saveMonsterEdit(id) {
+  const c = S.combatants.find(x=>x.id===id);
+  if(!c) return;
+  const nameEl = document.getElementById('em_name_'+id);
+  const hpEl = document.getElementById('em_hp_'+id);
+  const initEl = document.getElementById('em_init_'+id);
+  if(nameEl) { c.name = nameEl.value.trim()||c.name; c.baseName = c.name; }
+  if(hpEl) { const newMax = parseInt(hpEl.value)||c.maxHp; const diff = newMax - c.maxHp; c.maxHp = newMax; c.hp = Math.max(0, Math.min(newMax, c.hp + diff)); }
+  if(initEl) c.initiative = parseInt(initEl.value)||0;
+  S.editingMonster = null;
+  render();
+}
+
+// ── MAIN RENDER ───────────────────────────────────────────────────────────────
+
+function render() {
+  // Save all open stat blocks before re-rendering
+  S.combatants.filter(x=>x.type==='monster').forEach(m => {
+    const el = document.getElementById('sb_'+m.id);
+    if(el) m.statBlock = el.innerHTML;
+    const ib = document.getElementById('ib_'+m.id);
+    if(ib) m.infoBlock = ib.innerHTML;
+  });
+
+  const s = sorted(), c = cur();
+  const heroes = S.combatants.filter(x=>x.type==='hero');
+  const monsters = S.combatants.filter(x=>x.type==='monster');
+
+  const initRows = s.map((x,i)=>`<tr class="${x.id===c.id?'arow':''} ${x.hp<=0?'drow':''}">
+    <td>${i+1}</td><td>${x.name}</td>
+    <td style="font-size:11px;color:var(--text2)">${x.initBonus}</td>
+    <td><input type="number" value="${x.initiative}" onchange="setInit('${x.id}',this.value)"/></td>
+  </tr>`).join('');
+
+  const addForm = S.showForm ? `<div class="add-form">
+    <div class="frow">
+      <label>Назва</label><input type="text" id="mn" placeholder="Назва монстра"/>
+      <label>HP</label><input type="number" id="mh" placeholder="HP" min="1"/>
+      <label>Init</label><input type="number" id="mi" placeholder="Init"/>
+    </div>
+    <div class="frow">
+      <button onclick="addMonster()">Додати +</button>
+      <button onclick="S.showForm=false;render()" style="border-color:var(--border);color:var(--text2)">Скасувати</button>
+    </div>
+  </div>` : '';
+
+  const logHtml = [...S.log].reverse().map(l=>`<p>${l}</p>`).join('');
+
+  document.getElementById('app').innerHTML = `
+    <div class="turn-banner">
+      <div>
+        <div class="turn-label">Поточний хід</div>
+        <div class="turn-name">${c.name}${c.hp<=0?' (впав)':''}</div>
+      </div>
+      <div class="round-badge">Раунд ${S.round}</div>
+    </div>
+
+    <div class="slabel">Порядок ініціативи</div>
+    <table class="init-table">
+      <thead><tr><th>#</th><th>Персонаж</th><th>Бонус до ініціативи</th><th>Результат</th></tr></thead>
+      <tbody>${initRows}</tbody>
+    </table>
+
+    <div class="slabel">Герої</div>
+    ${heroes.map(x=>renderHeroRow(x, x.id===c.id)).join('')}
+
+    <div class="slabel">
+      Монстри
+      <button class="tog-btn" onclick="S.showForm=!S.showForm;render()">${S.showForm?'− сховати':'+ додати монстра'}</button>
+    </div>
+    ${addForm}
+    <div class="monster-grid">
+      ${monsters.map(x=>renderMonster(x, x.id===c.id)).join('')}
+      ${!monsters.length ? '<div style="font-size:12px;color:var(--text2);padding:4px 0">Монстрів немає — додай через кнопку вище.</div>' : ''}
+    </div>
+
+    <div class="slabel">Журнал</div>
+    <div class="log">${logHtml}</div>
+
+    <div class="btn-row">
+      <button class="pri" onclick="nextTurn()">Наступний хід →</button>
+      <button class="rest-short" onclick="doShortRest()">⛺ Short Rest</button>
+      <button class="rest-long" onclick="doLongRest()">🌙 Long Rest</button>
+      <button onclick="resetCombat()">Скинути бій</button>
+      <button onclick="backToSelect()">← Вибір персонажів</button>
+    </div>
+  `;
+}
+
+// ── INIT ──────────────────────────────────────────────────────────────────────
+buildSelectionScreen();
+</script>
+</body>
+</html>
