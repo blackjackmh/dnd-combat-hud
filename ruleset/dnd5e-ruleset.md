@@ -29,23 +29,24 @@
   - Natural 1 = two failures
 
 ### Conditions (2024 Edition)
-- **Blinded**: Can't see, -4 to hit, auto-miss on attacks
-- **Charmed**: Can't harm the charmer, advantage on WIS saves against charmer
-- **Deafened**: Can't hear
-- **Frightened**: Disadvantage on checks/saves while can see source, can't willingly move toward source
-- **Grappled**: Speed 0, can't benefit from increases to speed
-- **Incapacitated**: Can't act or react
-- **Invisible**: Unseen, advantage on attacks, disadvantage against attacks on you
-- **Paralyzed**: Incapacitated, automatically fail STR/DEX saves, attacks have advantage
-- **Petrified**: Incapacitated, treated as nonmagical object, resistances/immunities don't apply
+- **Blinded**: Can't see; automatically fail ability checks requiring sight; your attack rolls have **Disadvantage**; attack rolls against you have **Advantage**
+- **Charmed**: Can't attack or target charmer with harmful abilities/effects; charmer has Advantage on social ability checks against you *(no save bonus — commonly confused)*
+- **Deafened**: Can't hear; automatically fail ability checks requiring hearing
+- **Exhaustion**: Cumulative levels (1–6, die at 6); each level reduces all d20 rolls by 2 and Speed by 5 ft; Long Rest removes 1 level *(new unified system in 2024)*
+- **Frightened**: Disadvantage on ability checks and attack rolls while source is in line of sight; can't willingly move closer to source
+- **Grappled**: Speed 0 and can't increase; Disadvantage on attack rolls against any target **other than the grappler**; grappler can drag/carry you at half movement cost
+- **Incapacitated**: Can't take any Action, Bonus Action, or Reaction; Concentration broken; can't speak; Disadvantage on Initiative if Incapacitated when rolling
+- **Invisible**: Advantage on Initiative if Invisible when rolling; not affected by effects requiring sight; attack rolls against you have **Disadvantage**; your attack rolls have **Advantage**
+- **Paralyzed**: Has Incapacitated condition; Speed 0; automatically fail STR/DEX saves; attack rolls against you have Advantage; **any hit within 5 ft is a Critical Hit**
+- **Petrified**: Transformed into solid inanimate substance; weight ×10, stops aging; has Incapacitated condition; Speed 0; automatically fail STR/DEX saves; attacks against have Advantage; **Resistance to ALL damage**; **Immunity to Poisoned condition**
 - **Poisoned**: Disadvantage on attack rolls and ability checks
-- **Prone**: Can't move, disadvantage on melee attack, melee attacks within 5ft have advantage
-- **Restrained**: Speed 0, disadvantage on DEX saves/attacks
-- **Stunned**: Incapacitated, automatically fail STR/DEX saves, attacks have advantage
-- **Unconscious**: Incapacitated, can't move/speak, unaware of surroundings, hits auto-crit if within 5ft
+- **Prone**: Can only **crawl** (half speed) or spend half Speed to stand up; Disadvantage on attack rolls; attacks from within 5 ft against you have Advantage, attacks from further away have **Disadvantage**
+- **Restrained**: Speed 0; attack rolls against you have **Advantage**; your attack rolls have Disadvantage; Disadvantage on DEX saving throws
+- **Stunned**: Has Incapacitated condition; automatically fail STR/DEX saves; attack rolls against you have Advantage
+- **Unconscious**: Has Incapacitated and Prone conditions; drops held items; remains Prone when condition ends; Speed 0; attack rolls against you have Advantage; automatically fail STR/DEX saves; **any hit within 5 ft is a Critical Hit**; unaware of surroundings
 
 ### Common Save DCs
-- **Spell Save DC**: 8 + spell level + ability modifier
+- **Spell Save DC**: 8 + **proficiency bonus** + spellcasting ability modifier *(spell level is NOT part of this formula)*
 - **Ability DC**: 10 + proficiency + relevant ability modifier
 
 ### Melee Attacks
@@ -59,8 +60,8 @@
 - **Components**: Verbal (can't cast silenced), Somatic (need hand free), Material (specified cost)
 
 ### Resting
-- **Short Rest**: 1 hour, regain some HP/resources
-- **Long Rest**: 8 hours, regain all HP, slots, some class features
+- **Short Rest**: 1 hour; spend Hit Dice to regain HP (roll + CON modifier per die)
+- **Long Rest**: 8 hours; regain all HP and all spell slots; regain **half your maximum Hit Dice** (minimum 1), not all Hit Dice
 
 ## 2024 Edition Major Changes (PHB 2024)
 
@@ -96,9 +97,9 @@
 - **Rage**: Bonus to melee damage scaling improved
 
 #### Bard
-- **Spellcasting Focus**: Can use instrument as focus
-- **Bardic Inspiration**: Now uses d8 base (scaling: d8, d10, d12 at certain levels)
-- **Jack of All Trades**: Bonus increases at higher levels
+- **Spellcasting Focus**: Can use instrument as focus; Bard is a **FULL caster** (spell slots up to 9th level)
+- **Bardic Inspiration**: Starts at **d6** at level 1; scales to d8 (lvl 5), d10 (lvl 10), d12 (lvl 15)
+- **Jack of All Trades**: +half proficiency bonus to all non-proficient ability checks
 - **Bard Colleges**: Choose at 3rd level (Lore, Valor, Whispers, Swords, Eloquence, etc.)
 
 #### Cleric
@@ -109,7 +110,7 @@
 #### Druid
 - **Circle of the Moon**: Wildshape now scales with class levels
 - **Wildshape forms**: Can be used more frequently (resource management improved)
-- **Spellcasting**: Preparation remains Intelligence-based
+- **Spellcasting**: Preparation is **Wisdom-based** (not Intelligence)
 
 #### Fighter
 - **Extra Attack**: Granted at 5th level (unchanged from 2014)
@@ -176,8 +177,8 @@
 - Still no attack if incapacitated, unaware, or has taken Disengage action
 
 #### Action Surge (Fighter)
-- Bonus action attack (previously "one weapon attack")
-- Now explicitly "one melee weapon attack"
+- Grants one **additional Action** on your turn (not just an attack — can be used for spells, special actions, etc.)
+- Usable once per Short or Long Rest (twice at level 17)
 
 ### Spellcasting Updates (2024 Edition)
 
@@ -189,14 +190,15 @@
 - **Wizard**: d6 (1st), d8 (5th), d10 (11th), d12 (17th)
 - **Warlock**: d6 (1st), d8 (6th), d10 (11th), d12 (17th)
 
-#### Spell Slots (Full Casters: Cleric, Druid, Wizard)
-- **Bard**: Half-caster progression (up to 4th level spells)
+#### Spell Slots (Full Casters: Cleric, Druid, Wizard, Bard, Sorcerer)
+- **Bard**: **Full caster** — gains spell slots up to 9th level *(previously and incorrectly noted as half-caster)*
 - **Sorcerer**: Full-caster progression
-- **Warlock**: Short-rest recovery (unique mechanic)
+- **Paladin/Ranger**: Half-casters (spell slots up to 5th level)
+- **Warlock**: Short-rest recovery Pact Magic (unique mechanic, separate from standard slots)
 
 #### Key Spell Changes
-- **Cure Wounds**: Removed from spell list (no longer valid)
-- **Magic Missile**: Now 1d4+1 per projectile (was 1d4+1 total)
+- **Cure Wounds**: Still valid in 2024 *(previously incorrectly noted as removed — this was an error)*
+- **Magic Missile**: 1d4+1 Force per missile, auto-hits, 3 missiles base; this was the same in 2014 — no change
 - **Revivify**: Requires 300gp diamond (clarified)
 - **Concentration**: Rules unchanged (one active spell per creature)
 
@@ -204,7 +206,7 @@
 - **Bless**: +1d4 to attacks/saves, 1 minute concentration
 - **Fly**: 60ft flight, 10 minutes concentration
 - **Greater Invisibility**: Invisible but can attack, 1 minute concentration
-- **Hold Person**: Restrains target, 1 minute concentration (save each turn)
+- **Hold Person**: **Paralyzes** target (NOT Restrains — Paralyzed is much more severe), 1 minute concentration; target repeats WIS save each turn to end
 
 ### Equipment & Item Changes (2024 Edition)
 
@@ -284,8 +286,8 @@
 - Hit Dice remain (short rest recovery)
 
 #### Hit Dice Recovery
-- **Short Rest**: Spend 1+ Hit Dice, regain HP = roll + CON modifier
-- **Long Rest**: Regain all Hit Dice (max = character level)
+- **Short Rest**: Spend 1+ Hit Dice, regain HP = roll + CON modifier per die spent
+- **Long Rest**: Regain **half your maximum Hit Dice** (rounded down, minimum 1) — NOT all Hit Dice
 
 ---
 
@@ -313,10 +315,9 @@
 - Attack twice when you take the Attack action on your turn
 - Combines with spellcasting flexibility (cast spell + attack)
 
-#### Peerless Skill (at 14th Level)
-- When you make an ability check, you can expend one use of Bardic Inspiration
-- Add that inspiration die to the check without needing to see the result first
-- Usable once per turn
+#### Battle Magic (at 14th Level)
+- After you cast a spell using a spell slot, you can make one weapon attack as a Bonus Action
+- *(This is NOT Peerless Skill — Peerless Skill is a College of Lore feature)*
 
 **Key Strategy Notes:**
 - **Valor Bards are half-fighter, half-spellcaster**: Medium armor + shield makes them tankier than typical Bards
@@ -325,9 +326,9 @@
 - **Damage Focus**: More direct damage contribution than College of Lore
 
 ### College of Lore (Comparison)
-- **3rd Level**: Additional Magical Secrets (extra spells/cantrips from any class)
-- **6th Level**: Peerless Skill (expend inspiration to boost ability checks)
-- **14th Level**: Magical Secrets (gain two wizard spells of any level you can cast)
+- **3rd Level**: Bonus Proficiencies (3 skills) + Cutting Words (use Bardic Inspiration to subtract from enemy roll)
+- **6th Level**: Magical Discoveries (learn 2 spells from any class)
+- **14th Level**: Peerless Skill (expend Bardic Inspiration to add to an ability check **before or after** rolling)
 - **Focus**: Knowledge, utility, out-of-combat flexibility
 - **Armor**: Light armor only (not martial)
 
