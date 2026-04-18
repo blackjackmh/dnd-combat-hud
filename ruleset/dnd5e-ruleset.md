@@ -99,6 +99,7 @@
 - **Spellcasting Focus**: Can use instrument as focus
 - **Bardic Inspiration**: Now uses d8 base (scaling: d8, d10, d12 at certain levels)
 - **Jack of All Trades**: Bonus increases at higher levels
+- **Bard Colleges**: Choose at 3rd level (Lore, Valor, Whispers, Swords, Eloquence, etc.)
 
 #### Cleric
 - **Channel Divinity**: Uses Proficiency Bonus for save DC
@@ -285,6 +286,65 @@
 #### Hit Dice Recovery
 - **Short Rest**: Spend 1+ Hit Dice, regain HP = roll + CON modifier
 - **Long Rest**: Regain all Hit Dice (max = character level)
+
+---
+
+## Bard Colleges (Subclasses) - 2024 Edition
+
+### College of Valor
+*"Bards of the College of Valor are daring skalds whose tales keep warriors entertained in the aftermath of great battles. Unlike bards of other colleges, these musicians and storytellers have forged close ties with the martial world."*
+
+**3rd Level Features:**
+
+#### Bonus Proficiencies
+- **Martial weapons** and **medium armor**
+- **Shield proficiency**
+- Can use bardic inspiration on yourself or allies as usual
+
+#### Combat Inspiration
+- Your Bardic Inspiration die can be used in additional ways:
+  - **Weapon Attack**: Add to attack roll made within 1 minute of inspiration
+  - **Damage Roll**: Add to damage roll made within 1 minute of inspiration
+  - **Ability Check**: Add to ability check made within 1 minute (existing feature)
+  - **Saving Throw**: Add to saving throw made within 1 minute (existing feature)
+- **Key mechanic**: Inspiration can boost damage output directly in combat
+
+#### Extra Attack (at 6th Level)
+- Attack twice when you take the Attack action on your turn
+- Combines with spellcasting flexibility (cast spell + attack)
+
+#### Peerless Skill (at 14th Level)
+- When you make an ability check, you can expend one use of Bardic Inspiration
+- Add that inspiration die to the check without needing to see the result first
+- Usable once per turn
+
+**Key Strategy Notes:**
+- **Valor Bards are half-fighter, half-spellcaster**: Medium armor + shield makes them tankier than typical Bards
+- **Flexibility**: Can buff allies' attacks/damage or boost own attacks in real time
+- **Action Economy**: Extra Attack at 6th means you keep casting while dealing weapon damage
+- **Damage Focus**: More direct damage contribution than College of Lore
+
+### College of Lore (Comparison)
+- **3rd Level**: Additional Magical Secrets (extra spells/cantrips from any class)
+- **6th Level**: Peerless Skill (expend inspiration to boost ability checks)
+- **14th Level**: Magical Secrets (gain two wizard spells of any level you can cast)
+- **Focus**: Knowledge, utility, out-of-combat flexibility
+- **Armor**: Light armor only (not martial)
+
+### College of Eloquence (Brief)
+- **3rd Level**: Unsettling Words (modify creature's ability check/save with inspiration)
+- **Focus**: Persuasion, deception, social manipulation
+- **Key trait**: Bane presence affects audience reaction
+
+### College of Swords
+- **3rd Level**: Bonus to AC when holding weapon + shield
+- **Focus**: Blade performance, melee combat with flourish
+- **Key trait**: Sword Flourish maneuvers (Riposte, Slash, Thrust)
+
+### College of Whispers
+- **3rd Level**: Secret words (psychic damage/debuff using inspiration)
+- **Focus**: Espionage, intrigue, shadow operations
+- **Key trait**: Infiltrate enemies, gather intelligence
 
 ---
 
