@@ -346,6 +346,7 @@ const ALL_CHARACTERS = [
       {id:"gb",label:"Guiding Bolt (безк.)"}
     ],
     cdOptions: ["Divine Sense — Celestials/Fiends/Undead в 60фт, 10хв (бонусна дія)", "Vow of Enmity — Advantage на атаки проти цілі в 30фт, 1хв (при Attack action)"],
+    passives: ["🛡 Spellguard Shield — Advantage на всі saving throws проти заклинань та магічних ефектів · spell attack rolls мають Disadvantage проти тебе"],
     shortRestRestores: { resources:[], counters:[{id:"cd", amount:1}] },
     longRestRestores: "all",
     counters: [
@@ -1105,13 +1106,18 @@ function renderCol3AttacksResources(c) {
     <div class="blabel">Channel Divinity — опції</div>
     <div style="font-size:10px;color:var(--text2);line-height:1.8">${c.cdOptions.map(o=>`· ${o}`).join('<br>')}</div>` : '';
 
+  const passivesHtml = (c.passives && c.passives.length) ? `
+    <div class="divider"></div>
+    <div class="blabel">Пасивні здібності</div>
+    <div style="font-size:10px;color:var(--info-text);background:var(--info-bg);border:.5px solid var(--info);border-radius:var(--radius);padding:4px 7px;line-height:1.8">${c.passives.map(o=>`${o}`).join('<br>')}</div>` : '';
+
   return `<div>
     <div class="blabel">Атаки та кантріпи</div>
     ${atkRows}
     <div class="divider"></div>
     <div class="blabel">Ресурси</div>
     <div class="res-wrap">${hi}${resTags}${ctrTags}</div>
-    ${cdHtml}
+    ${cdHtml}${passivesHtml}
   </div>`;
 }
 
