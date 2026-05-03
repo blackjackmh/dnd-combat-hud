@@ -292,9 +292,9 @@
 
 const ALL_CHARACTERS = [
   {
-    id: "luffi", name: "Луффі", sub: "Паладин 4", initBonus: "DEX +0",
-    hp: 28, maxHp: 28, ac: 19, initiative: 0, spellDC: 13,
-    profBonus: 2,
+    id: "luffi", name: "Луффі", sub: "Паладин 5", initBonus: "DEX +0",
+    hp: 31, maxHp: 31, ac: 19, initiative: 0, spellDC: 14,
+    profBonus: 3,
     abilities: {STR:14,DEX:11,CON:11,INT:12,WIS:9,CHA:16},
     saveProficiencies: ["WIS","CHA"],
     skillProficiencies: {
@@ -304,15 +304,16 @@ const ALL_CHARACTERS = [
       "Persuasion":     {stat:"CHA", type:"prof"}
     },
     attacks: [
-      {name:"Longsword +1", bonus:"+5", dmg:"1d8+3", type:"Рубляча", note:"Versatile 1d10+3 · Mastery: Sap — влучання → ціль має Disadv. на наст. d20"},
-      {name:"Breath Weapon", bonus:"КС 10 DEX", dmg:"1d10", type:"Блискавка", note:"конус 15фт або лінія 30×5фт · 2/LR"},
-      {name:"True Strike", bonus:"+5", dmg:"1d8+3", type:"Рад./зброї", note:"кантріп · замість STR/DEX"},
+      {name:"Longsword +1", bonus:"+6", dmg:"1d8+3", type:"Рубляча", note:"Versatile 1d10+3 · Mastery: Sap — влучання → ціль має Disadv. на наст. d20"},
+      {name:"Breath Weapon", bonus:"КС 11 DEX", dmg:"2d10", type:"Блискавка", note:"конус 15фт або лінія 30×5фт · 3/LR"},
+      {name:"True Strike", bonus:"+6", dmg:"1d8+3", type:"Рад./зброї", note:"кантріп · замість STR/DEX"},
+      {name:"Guiding Bolt", bonus:"+6", dmg:"4d6", type:"Радіантна", note:"120фт · Magic Initiative · влучання → наст. атака проти цілі з Adv."},
       {name:"Javelin", bonus:"+4", dmg:"1d6+2", type:"Колюча", note:"Метальна 30/120фт · Mastery: Slow — влучання → ціль −10фт швидк."}
     ],
     // Spellcasting: Paladin prepares spells. Limit = 5 (Oath + Guiding Bolt don't count)
     spellcasting: {
       type: "prepared",
-      preparedLimit: 5,
+      preparedLimit: 6,
       alwaysPreparedNote: "Oath, Guiding Bolt та Divine Smite не входять в ліміт"
     },
     spells: [
@@ -322,9 +323,12 @@ const ALL_CHARACTERS = [
       // Oath — always prepared, не в ліміт
       {name:"Bane",         nameUa:"Прокляття",            lvl:1, tag:"oath", isConc:true},
       {name:"Hunter's Mark",nameUa:"Мітка Мисливця",       lvl:1, tag:"oath", isConc:true, isBA:true},
+      {name:"Hold Person",  nameUa:"Паралізувати Людину",  lvl:2, tag:"oath", isConc:true},
+      {name:"Misty Step",   nameUa:"Туманний Крок",        lvl:2, tag:"oath", isBA:true},
       // Always prepared (class feature / feat)
       {name:"Guiding Bolt", nameUa:"Промінь-Провідник",    lvl:1, tag:"magic-init"},
       {name:"Divine Smite", nameUa:"Божественний Удар",    lvl:1, tag:"always"},
+      {name:"Find Steed",   nameUa:"Знайти Скакуна",       lvl:2, tag:"always"},
       // Paladin spell list lvl 1 — preparable
       {name:"Bless",             nameUa:"Благословення",      lvl:1, tag:"prep", defaultPrepared:true},
       {name:"Command",           nameUa:"Наказ",              lvl:1, tag:"prep", defaultPrepared:false},
@@ -340,26 +344,36 @@ const ALL_CHARACTERS = [
       {name:"Searing Smite",     nameUa:"Палаючий Удар",      lvl:1, tag:"prep", defaultPrepared:true, isConc:true, isBA:true},
       {name:"Shield of Faith",   nameUa:"Щит Віри",           lvl:1, tag:"prep", defaultPrepared:true, isConc:true, isBA:true},
       {name:"Wrathful Smite",    nameUa:"Гнівний Удар",       lvl:1, tag:"prep", defaultPrepared:false, isConc:true, isBA:true},
+      // Level 2 preparable
+      {name:"Prayer of Healing", nameUa:"Молитва Зцілення",  lvl:2, tag:"prep", defaultPrepared:true},
     ],
     resources: [
       {id:"smite",label:"Free Smite"},
       {id:"gb",label:"Guiding Bolt (безк.)"}
     ],
     cdOptions: ["Divine Sense — Celestials/Fiends/Undead в 60фт, 10хв (бонусна дія)", "Vow of Enmity — Advantage на атаки проти цілі в 30фт, 1хв (при Attack action)"],
-    passives: ["🛡 Spellguard Shield — Advantage на всі saving throws проти заклинань та магічних ефектів · spell attack rolls мають Disadvantage проти тебе"],
+    passives: [
+      "🛡 Spellguard Shield — Advantage на всі saving throws проти заклинань та магічних ефектів · spell attack rolls мають Disadvantage проти тебе",
+      "⚔ Extra Attack — 2 атаки при Attack action",
+      "🐴 Faithful Steed — Find Steed завжди підготовлений · Misty Step (oath) при падінні з коня",
+      "🐉 Draconic Flight — 1×/LR бонусна дія: Fly 30фт на 10хв (не потребує концентрації)"
+    ],
     shortRestRestores: { resources:[], counters:[{id:"cd", amount:1}] },
     longRestRestores: "all",
     counters: [
-      {id:"slot1", label:"Slot 1 (1рів)", max:3, step:1},
+      {id:"slot1", label:"Slot 1 (1рів)", max:4, step:1},
+      {id:"slot2", label:"Slot 2 (2рів)", max:2, step:1},
       {id:"cd",    label:"Channel Div.",  max:2, step:1},
-      {id:"br",    label:"Breath Wpn",    max:2, step:1},
-      {id:"loh",   label:"Lay on Hands",  max:20, step:1}
+      {id:"br",    label:"Breath Wpn",    max:3, step:1},
+      {id:"loh",   label:"Lay on Hands",  max:25, step:1},
+      {id:"flight",label:"Draconic Flight",max:1, step:1},
+      {id:"wand",  label:"Wand of Fireballs",max:7, step:1}
     ]
   },
   {
-    id: "potuzhniy", name: "Потужній", sub: "Чарівник 4", initBonus: "DEX +1",
-    hp: 23, maxHp: 23, ac: 11, initiative: 0, spellDC: 15,
-    profBonus: 2,
+    id: "potuzhniy", name: "Потужній", sub: "Чарівник 5", initBonus: "DEX +1",
+    hp: 25, maxHp: 25, ac: 11, initiative: 0, spellDC: 16,
+    profBonus: 3,
     abilities: {STR:8,DEX:12,CON:12,INT:20,WIS:10,CHA:10},
     saveProficiencies: ["INT","WIS"],
     skillProficiencies: {
@@ -372,8 +386,8 @@ const ALL_CHARACTERS = [
       "Persuasion":     {stat:"CHA", type:"prof"}
     },
     attacks: [
-      {name:"Ray of Frost", bonus:"+7", dmg:"1d8", type:"Холод", note:"60фт · −10фт швидк. · промах=½ (Potent)"},
-      {name:"Shocking Grasp", bonus:"+7", dmg:"1d8", type:"Блискавка", note:"дотик · без реакції · промах=½ (Potent)"},
+      {name:"Ray of Frost", bonus:"+8", dmg:"1d8", type:"Холод", note:"60фт · −10фт швидк. · промах=½ (Potent)"},
+      {name:"Shocking Grasp", bonus:"+8", dmg:"1d8", type:"Блискавка", note:"дотик · без реакції · промах=½ (Potent)"},
       {name:"Quarterstaff", bonus:"+1", dmg:"1d6-1", type:"Дроблення", note:"Versatile 1d8-1 · Simple weapon"},
       {name:"Dagger", bonus:"+3", dmg:"1d4+1", type:"Колюча", note:"Фінесс · Метальна 20/60фт"}
     ],
@@ -403,22 +417,29 @@ const ALL_CHARACTERS = [
       {name:"Darkness",          nameUa:"Темрява",               lvl:2, tag:"prep", defaultPrepared:true, isConc:true},
       {name:"Gust of Wind",      nameUa:"Пориви Вітру",          lvl:2, tag:"prep", defaultPrepared:false, isConc:true},
       {name:"Melf's Acid Arrow", nameUa:"Кислотна Стріла Мелфа", lvl:2, tag:"prep", defaultPrepared:true},
+      // Level 3 — new at level 5
+      {name:"Counterspell",      nameUa:"Контрзакляття",         lvl:3, tag:"prep", defaultPrepared:false},
+      {name:"Fortune's Favor",   nameUa:"Сприяння Долі",         lvl:2, tag:"prep", defaultPrepared:false},
+      {name:"Haste",             nameUa:"Прискорення",           lvl:3, tag:"prep", defaultPrepared:true, isConc:true},
+      {name:"Slow",              nameUa:"Уповільнення",          lvl:3, tag:"prep", defaultPrepared:true, isConc:true},
     ],
     resources: [
-      {id:"arc",label:"Arcane Recovery"}
+      {id:"arc",label:"Arcane Recovery (3 рів.)"},
+      {id:"mem",label:"Memorize Spell"}
     ],
     shortRestRestores: { resources:[], counters:[] },
     longRestRestores: "all",
     counters: [
       {id:"slot1",  label:"Slot 1 (1рів)", max:4, step:1},
       {id:"slot2",  label:"Slot 2 (2рів)", max:3, step:1},
-      {id:"lucky",  label:"Lucky",          max:2, step:1}
+      {id:"slot3",  label:"Slot 3 (3рів)", max:2, step:1},
+      {id:"lucky",  label:"Lucky",          max:3, step:1}
     ]
   },
   {
-    id: "adolf", name: "Адольф", sub: "Бард 4 (CoS)", initBonus: "DEX +3",
-    hp: 29, maxHp: 29, ac: 15, initiative: 0, spellDC: 14,
-    profBonus: 2, jackOfAllTrades: true,
+    id: "adolf", name: "Адольф", sub: "Бард 5 (CoS)", initBonus: "DEX +3",
+    hp: 38, maxHp: 38, ac: 15, initiative: 0, spellDC: 15,
+    profBonus: 3, jackOfAllTrades: true,
     abilities: {STR:8,DEX:16,CON:14,INT:10,WIS:10,CHA:18},
     saveProficiencies: ["DEX","CHA"],
     skillProficiencies: {
@@ -434,7 +455,7 @@ const ALL_CHARACTERS = [
       {name:"Rapier + Slash. Flourish", bonus:"+5", dmg:"1d8+1d6+5", type:"Колюча", note:"Bardic Insp: +1d6 цілі + та ж 1d6 ін. істоті в 5фт"},
       {name:"Rapier + Mob. Flourish", bonus:"+5", dmg:"1d8+1d6+5", type:"Колюча", note:"Bardic Insp: +1d6 + відкинути 5d6фт + рух до неї"},
       {name:"Dagger", bonus:"+5", dmg:"1d4+3", type:"Колюча", note:"Фінесс · Метальна 20/60фт"},
-      {name:"Vicious Mockery", bonus:"КС 14 WIS", dmg:"1d6", type:"Психічна", note:"60фт · кантріп · Disadv. на наст. атаку цілі"}
+      {name:"Vicious Mockery", bonus:"КС 15 WIS", dmg:"1d6", type:"Психічна", note:"60фт · кантріп · Disadv. на наст. атаку цілі"}
     ],
     spellcasting: {
       type: "known",
@@ -454,18 +475,23 @@ const ALL_CHARACTERS = [
       {name:"Enhance Ability",    nameUa:"Посилити Здібність", lvl:2, tag:"known", isConc:true},
       {name:"Knock",              nameUa:"Відчинити",          lvl:2, tag:"known"},
       {name:"Shatter",            nameUa:"Розтрощити",         lvl:2, tag:"known"},
+      {name:"Fear",               nameUa:"Страх",              lvl:3, tag:"known", isConc:true},
+      {name:"Stinking Cloud",     nameUa:"Смердюча Хмара",     lvl:3, tag:"known", isConc:true},
       // Racial innate (1/day)
       {name:"Hellish Rebuke",     nameUa:"Пекельна Відплата",  lvl:2, tag:"racial"},
+      {name:"Darkness",           nameUa:"Темрява",            lvl:2, tag:"racial", isConc:true},
     ],
     resources: [
-      {id:"hr",label:"Hellish Rebuke (1/день)"}
+      {id:"hr",  label:"Hellish Rebuke (1/день)"},
+      {id:"dark",label:"Darkness (1/день)"}
     ],
-    shortRestRestores: { resources:[], counters:[] },
+    shortRestRestores: { resources:[], counters:[{id:"bi", amount:4}] },
     longRestRestores: "all",
     counters: [
-      {id:"slot1", label:"Slot 1 (1рів)",  max:4, step:1},
-      {id:"slot2", label:"Slot 2 (2рів)",  max:3, step:1},
-      {id:"bi",    label:"Bardic Insp.",    max:4, step:1}
+      {id:"slot1", label:"Slot 1 (1рів)",   max:4, step:1},
+      {id:"slot2", label:"Slot 2 (2рів)",   max:3, step:1},
+      {id:"slot3", label:"Slot 3 (3рів)",   max:2, step:1},
+      {id:"bi",    label:"Bardic Insp. d8", max:4, step:1}
     ]
   },
   {
@@ -941,6 +967,7 @@ function spellUrl(name) {
     "Calm Emotions":                   ["calm-emotions",                    "xphb"],
     "Cause Fear":                      ["cause-fear",                       "xge"],
     "Charm Person":                    ["charm-person",                     "xphb"],
+    "Counterspell":                    ["counterspell",                     "xphb"],
     "Command":                         ["command",                          "xphb"],
     "Compelled Duel":                  ["compelled-duel",                   "xphb"],
     "Crown of Madness":                ["crown-of-madness",                 "xphb"],
@@ -956,13 +983,18 @@ function spellUrl(name) {
     "Eldritch Blast":                  ["eldritch-blast",                   "xphb"],
     "Enhance Ability":                 ["enhance-ability",                  "xphb"],
     "Faerie Fire":                     ["faerie-fire",                      "xphb"],
+    "Fear":                            ["fear",                             "xphb"],
     "Feather Fall":                    ["feather-fall",                     "xphb"],
+    "Find Steed":                      ["find-steed",                       "xphb"],
+    "Fortune's Favor":                 ["fortunes-favor",                   "xge"],
     "Friends":                         ["friends",                          "xphb"],
     "Gust of Wind":                    ["gust-of-wind",                     "xphb"],
     "Guiding Bolt":                    ["guiding-bolt",                     "xphb"],
+    "Haste":                           ["haste",                            "xphb"],
     "Healing Word":                    ["healing-word",                     "xphb"],
     "Hellish Rebuke":                  ["hellish-rebuke",                   "xphb"],
     "Heroism":                         ["heroism",                          "xphb"],
+    "Hold Person":                     ["hold-person",                      "xphb"],
     "Hex":                             ["hex",                              "xphb"],
     "Hunter's Mark":                   ["hunters-mark",                     "xphb"],
     "Identify":                        ["identify",                         "xphb"],
@@ -976,6 +1008,7 @@ function spellUrl(name) {
     "Misty Step":                      ["misty-step",                       "xphb"],
     "Phantasmal Force":                ["phantasmal-force",                 "xphb"],
     "Prestidigitation":                ["prestidigitation",                 "xphb"],
+    "Prayer of Healing":               ["prayer-of-healing",                "xphb"],
     "Protection from Evil and Good":   ["protection-from-evil-and-good",    "xphb"],
     "Purify Food and Drink":           ["purify-food-and-drink",            "xphb"],
     "Ray of Frost":                    ["ray-of-frost",                     "xphb"],
@@ -984,6 +1017,8 @@ function spellUrl(name) {
     "Shield of Faith":                 ["shield-of-faith",                  "xphb"],
     "Shocking Grasp":                  ["shocking-grasp",                   "xphb"],
     "Sleep":                           ["sleep",                            "xphb"],
+    "Slow":                            ["slow",                             "xphb"],
+    "Stinking Cloud":                  ["stinking-cloud",                   "xphb"],
     "Thaumaturgy":                     ["thaumaturgy",                      "xphb"],
     "Thunderwave":                     ["thunderwave",                      "xphb"],
     "True Strike":                     ["true-strike",                      "xphb"],
