@@ -191,6 +191,23 @@
   .tog-btn { font-size: 11px; padding: 2px 9px; border-radius: var(--radius); border: .5px solid var(--border); background: var(--bg); color: var(--text2); cursor: pointer; }
   .tog-btn:hover { background: var(--bg2); }
 
+  /* Concentration button */
+  .conc-wrap { margin-bottom: 6px; }
+  .conc-btn {
+    width: 100%; padding: 8px 10px; border-radius: var(--radius);
+    font-size: 12px; font-weight: 600; cursor: pointer;
+    border: 1.5px solid; transition: all .2s; text-align: center;
+  }
+  .conc-btn.conc-off { border-color: var(--border); background: var(--bg2); color: var(--text3); font-weight: 400; }
+  .conc-btn.conc-on  { border-color: #9b59b6; background: #f0e0ff; color: #5b2c8d; box-shadow: 0 0 0 2px rgba(155,89,182,.15); letter-spacing:.02em; }
+  .conc-spell-select {
+    width: 100%; font-size: 11px; padding: 3px 6px; border-radius: var(--radius);
+    border: .5px solid #c49bd6; background: #faf5ff; color: #5b2c8d; margin-top: 3px; cursor: pointer;
+  }
+  /* Hero spell effect tags */
+  .heff-pos { font-size:10px; padding:2px 7px; border-radius:99px; border:.5px solid #1d9e75; color:#085041; background:#e1f5ee; cursor:pointer; user-select:none; }
+  .heff-neg { font-size:10px; padding:2px 7px; border-radius:99px; border:.5px solid #c0392b; color:#7b241c; background:#fdedec; cursor:pointer; user-select:none; }
+
   /* ── MOBILE RESPONSIVE ────────────────────────────────────────── */
   @media (max-width: 700px) {
     body { font-size: 14px; }
@@ -330,10 +347,10 @@ const ALL_CHARACTERS = [
       {name:"Divine Smite", nameUa:"Божественний Удар",    lvl:1, tag:"always"},
       {name:"Find Steed",   nameUa:"Знайти Скакуна",       lvl:2, tag:"always"},
       // Paladin spell list lvl 1 — preparable
-      {name:"Bless",             nameUa:"Благословення",      lvl:1, tag:"prep", defaultPrepared:true},
+      {name:"Bless",             nameUa:"Благословення",      lvl:1, tag:"prep", defaultPrepared:false},
       {name:"Command",           nameUa:"Наказ",              lvl:1, tag:"prep", defaultPrepared:false},
-      {name:"Compelled Duel",    nameUa:"Вимушений Дуель",    lvl:1, tag:"prep", defaultPrepared:true, isConc:true},
-      {name:"Cure Wounds",       nameUa:"Зцілення Ран",       lvl:1, tag:"prep", defaultPrepared:true},
+      {name:"Compelled Duel",    nameUa:"Вимушений Дуель",    lvl:1, tag:"prep", defaultPrepared:false, isConc:true},
+      {name:"Cure Wounds",       nameUa:"Зцілення Ран",       lvl:1, tag:"prep", defaultPrepared:false},
       {name:"Detect Evil and Good",nameUa:"Виявити Зло та Добро",lvl:1, tag:"prep", defaultPrepared:false, isConc:true},
       {name:"Detect Magic",      nameUa:"Виявити Магію",      lvl:1, tag:"prep", defaultPrepared:false, isConc:true},
       {name:"Detect Poison and Disease",nameUa:"Виявити Отруту та Хворобу",lvl:1, tag:"prep", defaultPrepared:false, isConc:true},
@@ -341,8 +358,8 @@ const ALL_CHARACTERS = [
       {name:"Heroism",           nameUa:"Героїзм",            lvl:1, tag:"prep", defaultPrepared:false, isConc:true},
       {name:"Protection from Evil and Good",nameUa:"Захист від Зла та Добра",lvl:1, tag:"prep", defaultPrepared:false},
       {name:"Purify Food and Drink",nameUa:"Очистити Їжу та Питво",lvl:1, tag:"prep", defaultPrepared:false},
-      {name:"Searing Smite",     nameUa:"Палаючий Удар",      lvl:1, tag:"prep", defaultPrepared:true, isConc:true, isBA:true},
-      {name:"Shield of Faith",   nameUa:"Щит Віри",           lvl:1, tag:"prep", defaultPrepared:true, isConc:true, isBA:true},
+      {name:"Searing Smite",     nameUa:"Палаючий Удар",      lvl:1, tag:"prep", defaultPrepared:false, isConc:true, isBA:true},
+      {name:"Shield of Faith",   nameUa:"Щит Віри",           lvl:1, tag:"prep", defaultPrepared:false, isConc:true, isBA:true},
       {name:"Wrathful Smite",    nameUa:"Гнівний Удар",       lvl:1, tag:"prep", defaultPrepared:false, isConc:true, isBA:true},
       // Level 2 preparable
       {name:"Aid",                        nameUa:"Підмога",                   lvl:2, tag:"prep", defaultPrepared:false},
@@ -350,7 +367,7 @@ const ALL_CHARACTERS = [
       {name:"Lesser Restoration",         nameUa:"Мале Відновлення",          lvl:2, tag:"prep", defaultPrepared:false},
       {name:"Locate Object",              nameUa:"Знайти Предмет",            lvl:2, tag:"prep", defaultPrepared:false, isConc:true},
       {name:"Magic Weapon",               nameUa:"Магічна Зброя",             lvl:2, tag:"prep", defaultPrepared:false},
-      {name:"Prayer of Healing",          nameUa:"Молитва Зцілення",          lvl:2, tag:"prep", defaultPrepared:true},
+      {name:"Prayer of Healing",          nameUa:"Молитва Зцілення",          lvl:2, tag:"prep", defaultPrepared:false},
       {name:"Protection from Poison",     nameUa:"Захист від Отрути",         lvl:2, tag:"prep", defaultPrepared:false},
       {name:"Shining Smite",              nameUa:"Сяючий Удар",               lvl:2, tag:"prep", defaultPrepared:false, isConc:true, isBA:true},
       {name:"Warding Bond",               nameUa:"Охоронний Зв'язок",         lvl:2, tag:"prep", defaultPrepared:false},
@@ -364,8 +381,7 @@ const ALL_CHARACTERS = [
     passives: [
       "🛡 Spellguard Shield — Advantage на всі saving throws проти заклинань та магічних ефектів · spell attack rolls мають Disadvantage проти тебе",
       "⚔ Extra Attack — 2 атаки при Attack action",
-      "🐴 Faithful Steed — Find Steed завжди підготовлений · Misty Step (oath) при падінні з коня",
-      "🐉 Draconic Flight — 1×/LR бонусна дія: Fly 30фт на 10хв (не потребує концентрації)"
+      "🐴 Faithful Steed — Find Steed завжди підготовлений · Misty Step (oath) при падінні з коня"
     ],
     shortRestRestores: { resources:[], counters:[{id:"cd", amount:1}] },
     longRestRestores: "all",
@@ -375,8 +391,7 @@ const ALL_CHARACTERS = [
       {id:"cd",    label:"Channel Div.",  max:2, step:1},
       {id:"br",    label:"Breath Wpn",    max:3, step:1},
       {id:"loh",   label:"Lay on Hands",  max:25, step:1},
-      {id:"flight",label:"Draconic Flight",max:1, step:1},
-      {id:"wand",  label:"Wand of Fireballs",max:7, step:1}
+      {id:"flight",label:"Draconic Flight",max:1, step:1}
     ]
   },
   {
@@ -414,23 +429,23 @@ const ALL_CHARACTERS = [
       // Spellbook — preparable (rituals can also be cast without preparing)
       {name:"Burning Hands",     nameUa:"Палаючі Руки",          lvl:1, tag:"prep", defaultPrepared:false},
       {name:"Detect Magic",      nameUa:"Виявити Магію",         lvl:1, tag:"prep", defaultPrepared:false, isRitual:true, isConc:true},
-      {name:"Disguise Self",     nameUa:"Самомаскування",        lvl:1, tag:"prep", defaultPrepared:true},
+      {name:"Disguise Self",     nameUa:"Самомаскування",        lvl:1, tag:"prep", defaultPrepared:false},
       {name:"Feather Fall",      nameUa:"Пір'яне Падіння",       lvl:1, tag:"prep", defaultPrepared:false},
       {name:"Identify",          nameUa:"Ідентифікація",         lvl:1, tag:"prep", defaultPrepared:false, isRitual:true},
-      {name:"Mage Armor",        nameUa:"Магічна Броня",         lvl:1, tag:"prep", defaultPrepared:true},
-      {name:"Magic Missile",     nameUa:"Магічна Стріла",        lvl:1, tag:"prep", defaultPrepared:true},
+      {name:"Mage Armor",        nameUa:"Магічна Броня",         lvl:1, tag:"prep", defaultPrepared:false},
+      {name:"Magic Missile",     nameUa:"Магічна Стріла",        lvl:1, tag:"prep", defaultPrepared:false},
       {name:"Shield",            nameUa:"Щит",                   lvl:1, tag:"prep", defaultPrepared:false},
       {name:"Sleep",             nameUa:"Сон",                   lvl:1, tag:"prep", defaultPrepared:false},
-      {name:"Thunderwave",       nameUa:"Громова Хвиля",         lvl:1, tag:"prep", defaultPrepared:true},
-      {name:"Witch Bolt",        nameUa:"Відьомський Болт",      lvl:1, tag:"prep", defaultPrepared:true, isConc:true},
-      {name:"Darkness",          nameUa:"Темрява",               lvl:2, tag:"prep", defaultPrepared:true, isConc:true},
+      {name:"Thunderwave",       nameUa:"Громова Хвиля",         lvl:1, tag:"prep", defaultPrepared:false},
+      {name:"Witch Bolt",        nameUa:"Відьомський Болт",      lvl:1, tag:"prep", defaultPrepared:false, isConc:true},
+      {name:"Darkness",          nameUa:"Темрява",               lvl:2, tag:"prep", defaultPrepared:false, isConc:true},
       {name:"Gust of Wind",      nameUa:"Пориви Вітру",          lvl:2, tag:"prep", defaultPrepared:false, isConc:true},
-      {name:"Melf's Acid Arrow", nameUa:"Кислотна Стріла Мелфа", lvl:2, tag:"prep", defaultPrepared:true},
+      {name:"Melf's Acid Arrow", nameUa:"Кислотна Стріла Мелфа", lvl:2, tag:"prep", defaultPrepared:false},
       // Level 3 — new at level 5
       {name:"Counterspell",      nameUa:"Контрзакляття",         lvl:3, tag:"prep", defaultPrepared:false},
       {name:"Fortune's Favor",   nameUa:"Сприяння Долі",         lvl:2, tag:"prep", defaultPrepared:false},
-      {name:"Haste",             nameUa:"Прискорення",           lvl:3, tag:"prep", defaultPrepared:true, isConc:true},
-      {name:"Slow",              nameUa:"Уповільнення",          lvl:3, tag:"prep", defaultPrepared:true, isConc:true},
+      {name:"Haste",             nameUa:"Прискорення",           lvl:3, tag:"prep", defaultPrepared:false, isConc:true},
+      {name:"Slow",              nameUa:"Уповільнення",          lvl:3, tag:"prep", defaultPrepared:false, isConc:true},
     ],
     resources: [
       {id:"arc",label:"Arcane Recovery (3 рів.)"},
@@ -611,6 +626,29 @@ const SPELL_EFFECTS = [
   { label:"Calm Emotions (байдужість до ворогів)", caster:"Штребіс", note:"Conc. 1хв · CHA save" },
 ];
 
+const HERO_SPELL_EFFECTS = [
+  // Позитивні ефекти (бафи на персонажа)
+  { label:"Bless (+1d4 атаки/saves)",            type:"positive", note:"Conc. 1хв" },
+  { label:"Shield of Faith (+2 AC)",              type:"positive", note:"Conc. 10хв · BA" },
+  { label:"Heroism (Immune Fear, +CHA HP/хід)",   type:"positive", note:"Conc. 1хв · BA" },
+  { label:"Divine Favor (+1d4 Radiant на атаки)", type:"positive", note:"Conc. 1хв · BA" },
+  { label:"Aid (+5 макс. HP)",                    type:"positive", note:"8год" },
+  { label:"Haste (2× швидк., +2AC, Extra Act.)",  type:"positive", note:"Conc. 1хв" },
+  { label:"Mage Armor (AC = 13+DEX)",             type:"positive", note:"8год" },
+  { label:"Fortune's Favor (Adv. на 1 кидок)",   type:"positive", note:"Conc. 1год" },
+  { label:"Enhance Ability (Adv. перевірок)",     type:"positive", note:"Conc. 1год" },
+  { label:"Hunter's Mark (+1d6 при влучанні)",    type:"positive", note:"Conc. 1год · BA" },
+  // Негативні ефекти (дебафи на персонажа)
+  { label:"Bane (−1d4 атаки/saves)",              type:"negative", note:"Conc. 1хв · WIS save" },
+  { label:"Slow (−10фт, −1AC, 1 дія/реакція)",   type:"negative", note:"Conc. 1хв · WIS save" },
+  { label:"Fear (Frightened, Disadv., тікати)",   type:"negative", note:"Conc. 1хв · WIS save" },
+  { label:"Hold Person (Паралізований)",           type:"negative", note:"Conc. 1хв · WIS save" },
+  { label:"Hex (Disadv. хар-ки, +1d6 Necrotic)",  type:"negative", note:"Conc. 1год" },
+  { label:"Compelled Duel (лише 1 ціль)",         type:"negative", note:"Conc. 1хв · WIS save" },
+  { label:"Searing Smite (🔥 1d6/хід, горить)",   type:"negative", note:"Conc. 1хв · CON save" },
+  { label:"Witch Bolt (⚡ 1d12 авто/хід)",         type:"negative", note:"Conc. 1хв" },
+];
+
 function buildCondOpts(forMonster) {
   const baseOpts = CONDITIONS.map(c=>`<option value="${c}">${c}</option>`).join('');
   if(!forMonster) return `<option value="">+ стан...</option>${baseOpts}`;
@@ -667,7 +705,7 @@ function toggleSelect(id) {
 
 // ── COMBAT STATE ──────────────────────────────────────────────────────────────
 
-let S = { round:1, currentIdx:0, showForm:false, log:[], used:{}, counters:{}, prepared:{}, combatants:[], editingMonster:null, deathSaves:{} };
+let S = { round:1, currentIdx:0, showForm:false, log:[], used:{}, counters:{}, prepared:{}, combatants:[], editingMonster:null, deathSaves:{}, concentration:{}, heroEffects:{} };
 
 function startCombat() {
   S.combatants = ALL_CHARACTERS
@@ -811,7 +849,7 @@ function addMonster() {
 
 function resetCombat() {
   if(!confirm('Скинути бій?')) return;
-  S.round=1; S.currentIdx=0; S.used={}; S.counters={};
+  S.round=1; S.currentIdx=0; S.used={}; S.counters={}; S.concentration={}; S.heroEffects={};
   S.log=["Бій скинуто."];
   S.combatants.forEach(x=>{ x.hp=x.maxHp; x.conditions=[]; });
   render();
@@ -851,6 +889,8 @@ function doLongRest() {
     // reset counters
     (c.counters||[]).forEach(cr => { delete S.counters[c.id+'_ctr_'+cr.id]; });
   });
+  S.concentration = {};
+  S.heroEffects = {};
   addLog('— Довгий відпочинок (Long Rest). HP та ресурси відновлено —', 'lrest');
   render();
 }
@@ -864,12 +904,33 @@ function backToSelect() {
   document.getElementById('start-btn').disabled=true;
 }
 
+function toggleConc(id) {
+  if (!S.concentration[id]) S.concentration[id] = { active: false, spell: '' };
+  S.concentration[id].active = !S.concentration[id].active;
+  if (!S.concentration[id].active) S.concentration[id].spell = '';
+  render();
+}
+function setConcSpell(id, val) {
+  if (!S.concentration[id]) S.concentration[id] = { active: true, spell: '' };
+  S.concentration[id].spell = val;
+  render();
+}
+function addHeroEffect(id, val) {
+  if (!val) return;
+  if (!S.heroEffects[id]) S.heroEffects[id] = [];
+  if (!S.heroEffects[id].includes(val)) S.heroEffects[id].push(val);
+  const sel = document.getElementById('hes_' + id); if (sel) sel.value = '';
+  render();
+}
+function remHeroEffect(id, i) { if (S.heroEffects[id]) S.heroEffects[id].splice(i, 1); render(); }
+
 // ── RENDER HELPERS ────────────────────────────────────────────────────────────
 
 function renderCol1(c) {
   const pct = Math.round(c.hp/c.maxHp*100);
   const conds = c.conditions.map((cond,i)=>`<span class="ctag" onclick="remCond('${c.id}',${i})" title="зняти">${cond}</span>`).join('');
 
+  // ── DEATH SAVES ──
   let deathSavesHtml = '';
   if(c.hp <= 0) {
     const successes = S.deathSaves[c.id+'_s'] || 0;
@@ -896,6 +957,39 @@ function renderCol1(c) {
     </div>`;
   }
 
+  // ── CONCENTRATION ──
+  const conc = S.concentration[c.id] || { active: false, spell: '' };
+  const concSpells = (c.spells || []).filter(sp => sp.isConc);
+  const concSpellOpts = concSpells.map(sp =>
+    `<option value="${sp.name}" ${conc.spell===sp.name?'selected':''}>${sp.nameUa}</option>`
+  ).join('');
+  const concHtml = `<div class="conc-wrap">
+    <button class="conc-btn ${conc.active ? 'conc-on' : 'conc-off'}" onclick="toggleConc('${c.id}')">
+      ${conc.active ? `⚡ КОНЦЕНТРАЦІЯ${conc.spell ? ': ' + conc.spell : ''}` : '◯ Без концентрації'}
+    </button>
+    ${conc.active && concSpells.length ? `<select class="conc-spell-select" onchange="setConcSpell('${c.id}',this.value)">
+      <option value="">— оберіть заклинання —</option>${concSpellOpts}
+    </select>` : ''}
+  </div>`;
+
+  // ── HERO SPELL EFFECTS ──
+  const heroEffs = S.heroEffects[c.id] || [];
+  const effTags = heroEffs.map((eff, i) => {
+    const effData = HERO_SPELL_EFFECTS.find(e => e.label === eff);
+    const isPos = effData && effData.type === 'positive';
+    return `<span class="${isPos ? 'heff-pos' : 'heff-neg'}" onclick="remHeroEffect('${c.id}',${i})" title="${effData ? effData.note : '— зняти'}">✕ ${eff}</span>`;
+  }).join('');
+  const posOpts = HERO_SPELL_EFFECTS.filter(e=>e.type==='positive').map(e=>`<option value="${e.label}" title="${e.note}">${e.label}</option>`).join('');
+  const negOpts = HERO_SPELL_EFFECTS.filter(e=>e.type==='negative').map(e=>`<option value="${e.label}" title="${e.note}">${e.label}</option>`).join('');
+  const heroEffHtml = `<div style="margin-top:5px">
+    ${effTags ? `<div class="cond-list" style="margin-bottom:3px">${effTags}</div>` : ''}
+    <select class="cond-select" id="hes_${c.id}" onchange="addHeroEffect('${c.id}',this.value)">
+      <option value="">+ ефект заклинання...</option>
+      <optgroup label="✨ Позитивні ефекти">${posOpts}</optgroup>
+      <optgroup label="🔴 Негативні ефекти">${negOpts}</optgroup>
+    </select>
+  </div>`;
+
   return `<div>
     <div class="cname">${c.name}</div>
     <div class="csub">${c.sub}</div>
@@ -907,10 +1001,12 @@ function renderCol1(c) {
       <button class="pm-btn" onclick="applyHp('${c.id}',-1)">−</button>
       <button class="pm-btn" onclick="applyHp('${c.id}',1)">+</button>
     </div>
+    ${concHtml}
     ${conds ? `<div class="cond-list">${conds}</div>` : ''}
     <select class="cond-select" id="cs_${c.id}" onchange="addCond('${c.id}',this.value)">
       <option value="">+ стан...</option>${COND_OPTS}
     </select>
+    ${heroEffHtml}
     ${deathSavesHtml}
   </div>`;
 }
