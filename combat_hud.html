@@ -73,6 +73,14 @@
   .atk-row:last-child { border-bottom: none; margin-bottom: 0; padding-bottom: 0; }
   .atk-name { font-size: 12px; font-weight: 500; color: var(--text); }
 
+  /* 🦫 Прокляття крототропії — форма кротолюдини */
+  .mole-tag { font-size: 10px; padding: 2px 7px; border-radius: 99px; border: .5px solid #8b5e34; color: #4a2f16; background: #f0e2d2; cursor: pointer; user-select: none; font-weight: 500; }
+  .mole-box { border: .5px solid #8b5e34; border-radius: var(--radius); background: #faf3ec; padding: 6px 8px; margin-top: 4px; }
+  .mole-title { font-size: 10px; font-weight: 600; color: #4a2f16; text-transform: uppercase; letter-spacing: .03em; margin-bottom: 5px; }
+  .mole-box .atk-row { border-bottom-color: #e0cbb2; color: #5c3d20; }
+  .mole-rules { font-size: 10px; color: #5c3d20; line-height: 1.75; margin-top: 5px; }
+  .mole-rules b { color: #4a2f16; }
+
   /* Spell list with prepare checkboxes */
   .spell-list { margin-top: 2px; }
   .spell-lvl-group { margin-bottom: 6px; }
@@ -312,6 +320,7 @@ const ALL_CHARACTERS = [
     id: "luffi", name: "Луффі", sub: "Паладин 5", initBonus: "DEX +0",
     hp: 31, maxHp: 31, ac: 19, initiative: 0, spellDC: 14,
     profBonus: 3,
+    moleman: true, // 🦫 Прокляття крототропії — Dragon Barrow, чари Незламнія
     abilities: {STR:14,DEX:11,CON:11,INT:12,WIS:9,CHA:16},
     saveProficiencies: ["WIS","CHA"],
     skillProficiencies: {
@@ -464,6 +473,7 @@ const ALL_CHARACTERS = [
     id: "adolf", name: "Адольф", sub: "Бард 5 (CoS)", initBonus: "DEX +3",
     hp: 38, maxHp: 38, ac: 15, initiative: 0, spellDC: 15,
     profBonus: 3, jackOfAllTrades: true,
+    moleman: true, // 🦫 Прокляття крототропії — Dragon Barrow, чари Незламнія
     abilities: {STR:8,DEX:16,CON:14,INT:10,WIS:10,CHA:18},
     saveProficiencies: ["DEX","CHA"],
     skillProficiencies: {
@@ -666,6 +676,15 @@ function buildCondOpts(forMonster) {
 }
 
 const COND_OPTS = CONDITIONS.map(c=>`<option value="${c}">${c}</option>`).join('');
+
+// 🦫 Прокляття крототропії — доступне лише проклятим героям (Луффі, Адольф)
+const MOLE_COND = "🦫 Кротолюдина (перетворення)";
+
+function heroCondOpts(c) {
+  if (!c.moleman) return COND_OPTS;
+  return `<optgroup label="🦫 Прокляття крототропії"><option value="${MOLE_COND}">${MOLE_COND}</option></optgroup>
+    <optgroup label="── Стандартні стани ──">${COND_OPTS}</optgroup>`;
+}
 
 function mod(score) { return Math.floor((score-10)/2); }
 function modStr(score) { const m=mod(score); return (m>=0?"+":"")+m; }
@@ -928,7 +947,11 @@ function remHeroEffect(id, i) { if (S.heroEffects[id]) S.heroEffects[id].splice(
 
 function renderCol1(c) {
   const pct = Math.round(c.hp/c.maxHp*100);
-  const conds = c.conditions.map((cond,i)=>`<span class="ctag" onclick="remCond('${c.id}',${i})" title="зняти">${cond}</span>`).join('');
+  const conds = c.conditions.map((cond,i)=>
+    cond === MOLE_COND
+      ? `<span class="mole-tag" onclick="remCond('${c.id}',${i})" title="зняти — кінець перетворення">${cond}</span>`
+      : `<span class="ctag" onclick="remCond('${c.id}',${i})" title="зняти">${cond}</span>`
+  ).join('');
 
   // ── DEATH SAVES ──
   let deathSavesHtml = '';
@@ -1004,7 +1027,7 @@ function renderCol1(c) {
     ${concHtml}
     ${conds ? `<div class="cond-list">${conds}</div>` : ''}
     <select class="cond-select" id="cs_${c.id}" onchange="addCond('${c.id}',this.value)">
-      <option value="">+ стан...</option>${COND_OPTS}
+      <option value="">+ стан...</option>${heroCondOpts(c)}
     </select>
     ${heroEffHtml}
     ${deathSavesHtml}
@@ -1257,8 +1280,37 @@ function renderCol3AttacksResources(c) {
     <div class="divider"></div>
     <div class="blabel">Ресурси</div>
     <div class="res-wrap">${hi}${resTags}${ctrTags}</div>
-    ${cdHtml}${passivesHtml}
+    ${cdHtml}${passivesHtml}${renderMolemanBlock(c)}
   </div>`;
+}
+
+// 🦫 Прокляття крототропії — окремий блок у самому низу колонки атак
+function renderMolemanBlock(c) {
+  if (!c.moleman) return '';
+  const strMod = mod(c.abilities.STR);
+  const hit = strMod + (c.profBonus || 2);
+  const dmgMod = strMod === 0 ? '' : (strMod > 0 ? '+' + strMod : String(strMod));
+  const conSave = mod(c.abilities.CON) + ((c.saveProficiencies||[]).includes('CON') ? (c.profBonus||2) : 0);
+  const isMole = c.conditions.includes(MOLE_COND);
+
+  return `
+    <div class="divider"></div>
+    <div class="mole-box">
+      <div class="mole-title">🦫 Прокляття крототропії${isMole ? ' — АКТИВНЕ' : ''}</div>
+      <div class="atk-row">
+        <div class="atk-name">Гострі пазурі — подвійна атака</div>
+        <div>${hit>=0?'+':''}${hit} → <b>1d8${dmgMod}</b> ×2 <span style="font-size:10px">Рубляча · дві атаки за Attack action · STR ${modStr(c.abilities.STR)} + проф. ${c.profBonus>=0?'+':''}${c.profBonus}</span></div>
+      </div>
+      <div class="mole-rules">
+        · <b>Старт бою:</b> CON save <b>КС 5</b>, щоб не перетворитися <span style="color:#7a5c3c">(кидок ${conSave>=0?'+':''}${conSave})</span><br>
+        · <b>Зненацька (surprise):</b> CON save <b>КС 10</b><br>
+        · <b>HP &lt; 5</b> (але &gt; 0) — перетворення <b>автоматичне</b><br>
+        · Впускає всі предмети з рук · впадає в шал — атакує найближчі цілі, <b>гравець не контролює дії</b><br>
+        · <b>Сліпа</b> в денному світлі · у темряві <b>бачить ясно</b><br>
+        · Зберігає всі свої стати (AC, HP, характеристики)<br>
+        · <b>Кінець:</b> лишилася одна в бою, або HP → 0
+      </div>
+    </div>`;
 }
 
 function renderHeroRow(c, isActive) {
