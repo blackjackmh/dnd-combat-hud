@@ -470,9 +470,12 @@ const ALL_CHARACTERS = [
     ]
   },
   {
-    id: "adolf", name: "Адольф", sub: "Бард 5 (CoS)", initBonus: "DEX +3",
+    id: "adolf", name: "Адольф", sub: "Бард 5 (CoS)", initBonus: "DEX +4 🍀",
     hp: 38, maxHp: 38, ac: 15, initiative: 0, spellDC: 15,
     profBonus: 3, jackOfAllTrades: true,
+    // 🍀 Stone of Good Luck (attuned) — +1 to every ability check and saving throw.
+    // Initiative is a DEX check, so initBonus above already includes it.
+    checkBonus: 1, saveBonus: 1, bonusSource: "Stone of Good Luck",
     moleman: true, // 🦫 Прокляття крототропії — Dragon Barrow, чари Незламнія
     abilities: {STR:8,DEX:16,CON:14,INT:10,WIS:10,CHA:18},
     saveProficiencies: ["DEX","CHA"],
@@ -1071,9 +1074,18 @@ function renderCol2Abilities(c) {
     skillsByAbility[sk.stat].push(sk);
   });
 
-  const saveHtml = ['STR','DEX','CON','INT','WIS','CHA'].filter(a => c.saveProficiencies && c.saveProficiencies.includes(a)).map(a => {
-    const bonus = mod(ab[a]) + pb;
-    return `<span class="save-tag">${ABILITY_SHORT[a]} ${bonus>=0?'+':''}${bonus}</span>`;
+  // Item bonuses that apply to every check / save (e.g. Stone of Good Luck)
+  const checkBonus = c.checkBonus || 0;
+  const saveBonus = c.saveBonus || 0;
+
+  // All six saves: a flat item bonus lifts the non-proficient ones too, and CON
+  // is the concentration save, so it is worth having on screen either way.
+  const saveHtml = ['STR','DEX','CON','INT','WIS','CHA'].map(a => {
+    const isProf = c.saveProficiencies && c.saveProficiencies.includes(a);
+    const bonus = mod(ab[a]) + (isProf ? pb : 0) + saveBonus;
+    const title = a==='CON' ? 'Рятівний кидок CON — кидок на концентрацію' : '';
+    const style = isProf ? '' : ' style="color:var(--text3)"';
+    return `<span class="save-tag"${style} title="${title}">${ABILITY_SHORT[a]} ${bonus>=0?'+':''}${bonus}${isProf?' ●':''}</span>`;
   }).join('');
 
   const rows = ['STR','DEX','CON','INT','WIS','CHA'].map(a => {
@@ -1084,14 +1096,14 @@ function renderCol2Abilities(c) {
     const skillsHtml = (skillsByAbility[a]||[]).map(sk => {
       const prof = c.skillProficiencies && c.skillProficiencies[sk.name];
       if (prof) {
-        const bonus = m + (prof.type==='expert' ? pb*2 : pb);
+        const bonus = m + (prof.type==='expert' ? pb*2 : pb) + checkBonus;
         const cls = prof.type==='expert' ? 'skill-expert' : 'skill-prof';
         return `<span class="${cls}">${sk.ua} ${bonus>=0?'+':''}${bonus}${prof.type==='expert'?' ★':''}</span>`;
       } else if (joat && joatBonus > 0) {
-        const bonus = m + joatBonus;
+        const bonus = m + joatBonus + checkBonus;
         return `<span style="color:#7a6a00" title="Jack of All Trades (+${joatBonus})">${sk.ua} ${bonus>=0?'+':''}${bonus}</span>`;
       } else {
-        const bonus = m;
+        const bonus = m + checkBonus;
         return `<span style="color:var(--text3)">${sk.ua} ${bonus>=0?'+':''}${bonus}</span>`;
       }
     }).join('');
@@ -1107,8 +1119,9 @@ function renderCol2Abilities(c) {
   return `<div>
     <div class="blabel">Характеристики та навички</div>
     ${c.jackOfAllTrades ? `<div style="font-size:9px;color:#7a6a00;margin-bottom:4px">🟡 = Jack of All Trades (+${Math.floor((c.profBonus||2)/2)} до непроф. навичок)</div>` : ''}
+    ${(checkBonus || saveBonus) ? `<div style="font-size:9px;color:#1d7a5e;margin-bottom:4px">🍀 ${c.bonusSource||'Предмет'}: +${checkBonus} до всіх перевірок характеристик (враховано в навичках та ініціативі), +${saveBonus} до всіх рятівних кидків</div>` : ''}
     <div class="ability-grid">${rows}</div>
-    ${saveHtml ? `<div style="margin-top:6px"><div class="blabel">Рятівні кидки</div><div class="save-prof">${saveHtml}</div></div>` : ''}
+    ${saveHtml ? `<div style="margin-top:6px"><div class="blabel">Рятівні кидки <span style="font-weight:400;text-transform:none;letter-spacing:0">(● = майстерність)</span></div><div class="save-prof">${saveHtml}</div></div>` : ''}
   </div>`;
 }
 
