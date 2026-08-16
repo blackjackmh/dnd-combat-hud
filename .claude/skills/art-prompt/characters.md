@@ -113,6 +113,16 @@
 
 ---
 
+### Бомбур (Bombur)
+
+**Аліаси:** Бомбур, Бомбура, Бомбуру, Bombur, старий дварф
+**Роль:** Старий щитовий дварф зі Стоунгіллського заїзду · єдиний живий свідок подій в Аксхолмі
+
+**Канон:**
+> Bombur, an old shield dwarf well past a hundred years. Short and heavily built, thick through the chest and shoulders, with the stooped, barrel-bodied frame of someone who has spent a lifetime rolling casks. His long grey beard is plaited into two thick braids weighted with plain iron rings, and his bald crown is fringed with the same grey hair. His face is broad and deeply lined, the nose bulbous and reddened by decades of drink, the eyes small, pouched and tired. He wears a stained leather cellarman's apron over a coarse woollen shirt with the sleeves pushed up thick forearms, heavy boots, and a ring of cellar keys and a tapping mallet hanging at his belt. He is rarely without a dented pewter tankard in one fist. His manner is gruff, weary and closed-off.
+
+---
+
 ## ➕ Шаблон для нового персонажа
 
 ```markdown
