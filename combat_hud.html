@@ -724,7 +724,7 @@ function toggleSelect(id) {
 
 // ── COMBAT STATE ──────────────────────────────────────────────────────────────
 
-let S = { round:1, currentIdx:0, showForm:false, log:[], used:{}, counters:{}, prepared:{}, combatants:[], editingMonster:null, deathSaves:{}, concentration:{}, heroEffects:{} };
+let S = { round:1, currentIdx:0, showForm:false, log:[], used:{}, counters:{}, prepared:{}, combatants:[], editingMonster:null, deathSaves:{}, concentration:{}, heroEffects:{}, newMonster:{ name:'', hp:'', statBlock:'', infoBlock:'' } };
 
 function startCombat() {
   S.combatants = ALL_CHARACTERS
@@ -847,21 +847,48 @@ function togglePrepared(cid, spellName) {
   });
 }
 
+// Capture whatever is currently typed into the add-monster form, so a re-render
+// (HP tick, condition change, …) doesn't wipe a half-filled stat block.
+function saveNewMonsterDraft() {
+  const n = document.getElementById('mn'), h = document.getElementById('mh');
+  const sb = document.getElementById('m_sb'), ib = document.getElementById('m_ib');
+  if(!n && !h && !sb && !ib) return;
+  S.newMonster = {
+    name: n ? n.value : (S.newMonster.name||''),
+    hp: h ? h.value : (S.newMonster.hp||''),
+    statBlock: sb ? sb.innerHTML : (S.newMonster.statBlock||''),
+    infoBlock: ib ? ib.innerHTML : (S.newMonster.infoBlock||'')
+  };
+}
+
+function clearNewMonsterDraft() {
+  S.newMonster = { name:'', hp:'', statBlock:'', infoBlock:'' };
+  // Also blank the live fields — render() re-reads them before redrawing
+  const n = document.getElementById('mn'), h = document.getElementById('mh');
+  const sb = document.getElementById('m_sb'), ib = document.getElementById('m_ib');
+  if(n) n.value = '';
+  if(h) h.value = '';
+  if(sb) sb.innerHTML = '';
+  if(ib) ib.innerHTML = '';
+}
+
 function addMonster() {
-  const name = document.getElementById('mn').value.trim();
-  const hp = parseInt(document.getElementById('mh').value)||10;
-  const init = parseInt(document.getElementById('mi').value)||0;
+  saveNewMonsterDraft();
+  const name = (S.newMonster.name||'').trim();
+  const hp = parseInt(S.newMonster.hp)||10;
+  const statBlock = S.newMonster.statBlock||'';
+  const infoBlock = S.newMonster.infoBlock||'';
   if(!name) return;
   // Count existing monsters with the same base name for numbering
   const baseCount = S.combatants.filter(x => x.type==='monster' && x.baseName === name).length;
   const num = baseCount + 1;
   S.combatants.push({
     id:'m'+Date.now(), name, baseName: name, num, sub:'Монстр', type:'monster',
-    hp, maxHp:hp, ac:10, initiative:init, initBonus:'—', spellDC:0,
-    speed: '—', statBlock: '', infoBlock: '',
+    hp, maxHp:hp, ac:10, initiative:0, initBonus:'—', spellDC:0,
+    speed: '—', statBlock, infoBlock,
     attacks:[], spells:[], resources:[], counters:[], conditions:[]
   });
-  ['mn','mh','mi'].forEach(x=>{ const el=document.getElementById(x); if(el) el.value=''; });
+  clearNewMonsterDraft();
   addLog(`Додано: ${name} #${num}`, 'lhero');
   render();
 }
@@ -1443,6 +1470,8 @@ function saveMonsterEdit(id) {
 // ── MAIN RENDER ───────────────────────────────────────────────────────────────
 
 function render() {
+  // Save the in-progress add-monster form before re-rendering
+  saveNewMonsterDraft();
   // Save all open stat blocks before re-rendering
   S.combatants.filter(x=>x.type==='monster').forEach(m => {
     const el = document.getElementById('sb_'+m.id);
@@ -1461,15 +1490,26 @@ function render() {
     <td><input type="number" value="${x.initiative}" onchange="setInit('${x.id}',this.value)"/></td>
   </tr>`).join('');
 
+  const draft = S.newMonster || {};
   const addForm = S.showForm ? `<div class="add-form">
     <div class="frow">
-      <label>Назва</label><input type="text" id="mn" placeholder="Назва монстра"/>
-      <label>HP</label><input type="number" id="mh" placeholder="HP" min="1"/>
-      <label>Init</label><input type="number" id="mi" placeholder="Init"/>
+      <label>Назва</label><input type="text" id="mn" placeholder="Назва монстра" value="${(draft.name||'').replace(/"/g,'&quot;')}"/>
+      <label>HP</label><input type="number" id="mh" placeholder="HP" min="1" value="${draft.hp||''}"/>
     </div>
-    <div class="frow">
+    <div class="blabel">Нотатки / Інфо</div>
+    <div class="info-block-field" id="m_ib" contenteditable="true"
+      data-placeholder="Нотатки про монстра: вразливості, здібності, тактика..."
+      onkeydown="preventFormatting(event)"
+      onpaste="handlePlainPaste(event)"
+      onblur="saveNewMonsterDraft()">${draft.infoBlock||''}</div>
+    <div class="blabel" style="margin-top:6px">Stat Block / Атаки</div>
+    <div class="stat-block-field" id="m_sb" contenteditable="true"
+      data-placeholder="Введіть текст атак, здібностей, дій монстра..."
+      onblur="saveNewMonsterDraft()">${draft.statBlock||''}</div>
+    <div class="frow" style="margin-top:8px">
       <button onclick="addMonster()">Додати +</button>
-      <button onclick="S.showForm=false;render()" style="border-color:var(--border);color:var(--text2)">Скасувати</button>
+      <button onclick="saveNewMonsterDraft();S.showForm=false;render()" style="border-color:var(--border);color:var(--text2)">Згорнути</button>
+      <button onclick="clearNewMonsterDraft();render()" style="border-color:var(--border);color:var(--text2)">Очистити</button>
     </div>
   </div>` : '';
 
