@@ -123,6 +123,16 @@
 
 ---
 
+### Кастелян Аксхолму (Castellan of Axeholm)
+
+**Аліаси:** кастелян, кастеляна, кастелян Аксхолму, колишній кастелян, гуль-кастелян, ghoul castellan, castellan
+**Роль:** Дварф-кастелян Аксхолму, що лишився замикати фортецю · нині гуль у тронній залі (A14)
+
+**Канон:**
+> The ghoul castellan of Axeholm — all that remains of the shield dwarf who stayed behind to seal the fortress after the garrison fled. A short, broad-boned dwarf gone hollow: the muscle has wasted off the heavy frame so the collarbones, ribs and shoulder blades stand out under grey-green skin that is drawn tight and has split open across the knuckles and elbows, the edges of each split dried dark and curled back. His scalp is bald and blotched; the lips have shrunk away from long yellowed teeth and the nose has fallen in to a bare triangular hole; what is left of a long dwarven beard hangs in two or three matted grey ropes, the rest pulled out in clumps down to raw scalp. His eyes are sunken and milk-white with no pupils, ringed by dark hollows. His fingers have lengthened and the nails have thickened into blackened hooked claws. Over the remains of a mail shirt — links missing in whole patches, the rest furred with orange rust — he wears the castellan's heraldic surcoat: a deep blue tabard bearing the Axeholm crest, a handaxe clutched in a dwarven gauntlet, worked in gold thread. The surcoat has been torn away along the hem into hanging tongues of cloth, one shoulder seam has burst so the front panel hangs crooked, and the gold embroidery has frayed and lifted into loose loops with whole stitches gone, leaving the axe-head half unpicked. On one clawed finger sits a heavy gold signet ring cut with the same crest, bright and unmarked against the grey hand.
+
+---
+
 ## ➕ Шаблон для нового персонажа
 
 ```markdown
