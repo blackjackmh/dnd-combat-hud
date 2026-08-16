@@ -427,6 +427,9 @@ const ALL_CHARACTERS = [
     spellcasting: {
       type: "prepared",
       preparedLimit: 7,
+      // Ritual Adept (Чарівник 1) — єдиний, хто кастує ритуали без підготовки.
+      // Решті класів правила 2024 вимагають мати ритуал підготовленим.
+      ritualAdept: true,
       alwaysPreparedNote: "Ритуали ✦ можна кастувати без підготовки (з книги, +10 хв)"
     },
     spells: [
@@ -819,10 +822,11 @@ function togglePrepared(cid, spellName) {
   const currentlyPrepared = S.prepared[key] || false;
   const limit = c.spellcasting.preparedLimit;
   const sp = c.spells.find(s=>s.name===spellName);
-  const isRitual = sp && sp.isRitual;
+  // Правила 2024: ритуал теж треба підготувати. Ліміт обходять лише ті, хто має
+  // Ritual Adept (Чарівник) — вони кастують ритуали прямо з книги.
+  const bypassesLimit = sp && sp.isRitual && c.spellcasting.ritualAdept;
   const preparedCount = c.spells.filter(sp=>sp.tag==='prep' && S.prepared[cid+'_'+sp.name]).length;
-  // Rituals bypass the limit; block only non-rituals
-  if (!currentlyPrepared && preparedCount >= limit && !isRitual) {
+  if (!currentlyPrepared && preparedCount >= limit && !bypassesLimit) {
     const el = document.getElementById('prep_'+cid+'_'+spellName.replace(/[^a-z0-9]/gi,'_'));
     if(el) { el.checked = false; el.style.outline='2px solid var(--red)'; setTimeout(()=>el.style.outline='',900); }
     return;
@@ -838,13 +842,15 @@ function togglePrepared(cid, spellName) {
   // Sync checkbox state
   const chk = document.getElementById('prep_'+cid+'_'+spellName.replace(/[^a-z0-9]/gi,'_'));
   if(chk) chk.checked = S.prepared[key];
-  // Disable all unchecked non-ritual checkboxes if at limit; rituals always stay full opacity
+  // На ліміті глушимо все невідмічене; повну непрозорість зберігають лише ритуали
+  // того, хто має Ritual Adept.
   const atLimit = newCount >= limit;
   c.spells.filter(sp=>sp.tag==='prep').forEach(sp => {
     const sid = 'prep_'+cid+'_'+sp.name.replace(/[^a-z0-9]/gi,'_');
     const el = document.getElementById(sid);
     if(!el) return;
-    const shouldDisable = atLimit && !S.prepared[cid+'_'+sp.name] && !sp.isRitual;
+    const shouldDisable = atLimit && !S.prepared[cid+'_'+sp.name]
+      && !(sp.isRitual && c.spellcasting.ritualAdept);
     el.disabled = shouldDisable;
     const row = el.closest('.spell-item');
     if(row) row.style.opacity = shouldDisable ? '0.4' : '1';
@@ -1253,10 +1259,10 @@ function renderCol4Spells(c) {
         const key = c.id+'_'+sp.name;
         const checked = S.prepared[key] ? 'checked' : '';
         const safeId = 'prep_'+c.id+'_'+sp.name.replace(/[^a-z0-9]/gi,'_');
-        // Rituals are always usable even unprepared — show full opacity
-        const isRitualUnprepared = sp.isRitual && !S.prepared[key];
-        const isDisabled = (atLimit && !S.prepared[key] && !sp.isRitual) ? 'disabled' : '';
-        const rowOpacity = (isDisabled && !sp.isRitual) ? 'opacity:.4' : 'opacity:1';
+        // Ритуал лишається доступним поза лімітом лише з Ritual Adept (Чарівник)
+        const ritualBypass = sp.isRitual && c.spellcasting.ritualAdept;
+        const isDisabled = (atLimit && !S.prepared[key] && !ritualBypass) ? 'disabled' : '';
+        const rowOpacity = isDisabled ? 'opacity:.4' : 'opacity:1';
         const safeSpellName = sp.name.replace(/'/g, "\\'");
         return `<div class="spell-item" style="${rowOpacity}">
           <input type="checkbox" id="${safeId}" ${checked} ${isDisabled} onchange="togglePrepared('${c.id}','${safeSpellName}')"/>
