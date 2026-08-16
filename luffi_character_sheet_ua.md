@@ -200,9 +200,9 @@ Divine Smite завжди підготовлений. **1 раз безкошт�
 
 ## 💡 Швидка Довідка для МП
 
-- **AC 19, HP 28** — найміцніший у загоні.
+- **AC 19, HP 31** — найвищий AC у загоні.
 - **Ключове комбо:** Vow of Enmity (Advantage) → Longsword +1 → Divine Smite = пік шкоди
-- **Breath Weapon КС 10** *(8 + CON+0 + проф.+2)* — хороший AoE, але **Луффі сам має Resistance до Lightning**
+- **Breath Weapon КС 11** *(8 + CON+0 + проф.+3)* — хороший AoE, але **Луффі сам має Resistance до Lightning**
 - **Channel Divinity відновлюється після Short Rest** — не бережи
 - **Bless** — найкращий баф у загоні, впливає на всіх трьох одночасно
 - **Draconic Flight:** Бонусна дія → Fly Speed 30 фт на 10 хв, 1×/Long Rest
