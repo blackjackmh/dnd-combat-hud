@@ -118,7 +118,7 @@
   .cres-tag { font-size: 10px; padding: 2px 8px; border-radius: 99px; border: .5px solid var(--info); color: var(--info-text); background: var(--info-bg); cursor: pointer; user-select: none; white-space: nowrap; }
   .cres-tag.exhausted { border-color: var(--border); color: var(--text3); text-decoration: line-through; opacity: .5; background: none; }
 
-  /* 🎲 Hit Dice — кістки хітів */
+  /* 🎲 HP Die (Hit Point Dice) */
   .hd-head { display: flex; align-items: baseline; gap: 6px; margin-bottom: 4px; }
   .hd-die { font-size: 11px; font-weight: 500; color: var(--text); }
   .hd-count { font-size: 10px; color: var(--text2); }
@@ -735,7 +735,7 @@ function buildSelectionScreen() {
         <span>AC ${c.ac}</span>
         <span>КС ${c.spellDC}</span>
         <span>Init ${c.initBonus}</span>
-        ${c.hitDice ? `<span title="Кістки хітів">🎲 ${c.hitDice.count}${c.hitDice.die}</span>` : ''}
+        ${c.hitDice ? `<span title="HP Die">🎲 ${c.hitDice.count}${c.hitDice.die}</span>` : ''}
       </div>
     </div>`;
   }).join('');
@@ -767,6 +767,8 @@ function startCombat() {
   });
   // HI absent by default — player marks when received
   S.combatants.forEach(c => { if(c.type==='hero') S.used['HI_'+c.id] = true; });
+  // HP Die: кожен новий бій стартує з повним пулом
+  S.hitDice = {};
   S.log = ["Бій почався. Введіть ініціативу та починайте!"];
   document.getElementById('select-screen').style.display = 'none';
   document.getElementById('hud-screen').style.display = 'block';
@@ -805,9 +807,10 @@ function tickCounter(cid, rid, max, step) {
   S.counters[k] = S.counters[k]<=0 ? max : Math.max(0, S.counters[k]-step);
   render();
 }
-// ── HIT DICE (Кістки хітів) ───────────────────────────────────────────────────
+// ── HP DIE (Hit Point Dice) ───────────────────────────────────────────────────
 // Витрачаються під час короткого відпочинку (1 кістка → кидок + CON mod, мін. 1 HP).
 // Довгий відпочинок за правилами 2024 повертає ВСІ витрачені кістки (у 2014 — половину).
+// Новий бій завжди починається з повним пулом — див. startCombat().
 function getHitDice(c) {
   const k = 'HD_' + c.id;
   if (S.hitDice[k] === undefined) S.hitDice[k] = c.hitDice.count;
@@ -994,7 +997,7 @@ function doLongRest() {
   S.concentration = {};
   S.heroEffects = {};
   addLog('— Довгий відпочинок (Long Rest). HP та ресурси відновлено —', 'lrest');
-  if (hdMsgs.length) addLog(`🎲 Кістки хітів відновлено повністю: ${hdMsgs.join(' · ')}`, 'lrest');
+  if (hdMsgs.length) addLog(`🎲 HP Die відновлено повністю: ${hdMsgs.join(' · ')}`, 'lrest');
   render();
 }
 
@@ -1379,7 +1382,7 @@ function renderCol3AttacksResources(c) {
   </div>`;
 }
 
-// 🎲 Кістки хітів — витрачаються на короткому відпочинку, повертаються на довгому
+// 🎲 HP Die — витрачаються на короткому відпочинку, повертаються на довгому
 function renderHitDice(c) {
   if (!c.hitDice) return '';
   const { die, count } = c.hitDice;
@@ -1394,7 +1397,7 @@ function renderHitDice(c) {
   return `
     <div class="divider"></div>
     <div class="hd-head">
-      <span class="blabel" style="margin-bottom:0">🎲 Кістки хітів</span>
+      <span class="blabel" style="margin-bottom:0">🎲 HP Die</span>
       <span class="hd-die">${count}${die}</span>
       <span class="hd-count ${left<=0?'empty':''}">(${left}/${count})</span>
     </div>
