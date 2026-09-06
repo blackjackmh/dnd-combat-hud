@@ -118,6 +118,19 @@
   .cres-tag { font-size: 10px; padding: 2px 8px; border-radius: 99px; border: .5px solid var(--info); color: var(--info-text); background: var(--info-bg); cursor: pointer; user-select: none; white-space: nowrap; }
   .cres-tag.exhausted { border-color: var(--border); color: var(--text3); text-decoration: line-through; opacity: .5; background: none; }
 
+  /* 🎲 Hit Dice — кістки хітів */
+  .hd-head { display: flex; align-items: baseline; gap: 6px; margin-bottom: 4px; }
+  .hd-die { font-size: 11px; font-weight: 500; color: var(--text); }
+  .hd-count { font-size: 10px; color: var(--text2); }
+  .hd-count.empty { color: var(--red); }
+  .hd-pips { display: flex; gap: 4px; flex-wrap: wrap; }
+  .hd-pip { width: 22px; height: 22px; border-radius: 5px; border: 1px solid #7a5ba8; background: #f0e9fa; color: #4a2f7a;
+            font-size: 9px; font-weight: 500; display: flex; align-items: center; justify-content: center;
+            cursor: pointer; user-select: none; flex-shrink: 0; transition: background .15s; }
+  .hd-pip:hover { background: #e0d2f5; }
+  .hd-pip.spent { border-color: var(--border2); border-style: dashed; background: none; color: var(--text3); opacity: .55; }
+  .hd-note { font-size: 10px; color: var(--text2); line-height: 1.7; margin-top: 4px; }
+
   /* monster grid */
   .monster-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-bottom: 8px; }
   .mcard { background: var(--bg); border: .5px solid var(--border); border-radius: var(--radius-lg); padding: 10px 12px; }
@@ -320,6 +333,7 @@ const ALL_CHARACTERS = [
     id: "luffi", name: "Луффі", sub: "Паладин 5", initBonus: "DEX +0",
     hp: 31, maxHp: 31, ac: 19, initiative: 0, spellDC: 14,
     profBonus: 3,
+    hitDice: { die: "d10", count: 5 }, // Паладин — d10 за рівень
     moleman: true, // 🦫 Прокляття крототропії — Dragon Barrow, чари Незламнія
     abilities: {STR:14,DEX:11,CON:11,INT:12,WIS:9,CHA:16},
     saveProficiencies: ["WIS","CHA"],
@@ -407,6 +421,7 @@ const ALL_CHARACTERS = [
     id: "potuzhniy", name: "Потужній", sub: "Чарівник 5", initBonus: "DEX +1",
     hp: 25, maxHp: 25, ac: 11, initiative: 0, spellDC: 16,
     profBonus: 3,
+    hitDice: { die: "d6", count: 5 }, // Чарівник — d6 за рівень
     abilities: {STR:8,DEX:12,CON:12,INT:20,WIS:10,CHA:10},
     saveProficiencies: ["INT","WIS"],
     skillProficiencies: {
@@ -476,6 +491,7 @@ const ALL_CHARACTERS = [
     id: "adolf", name: "Адольф", sub: "Бард 5 (CoS)", initBonus: "DEX +4 🍀",
     hp: 38, maxHp: 38, ac: 15, initiative: 0, spellDC: 15,
     profBonus: 3, jackOfAllTrades: true,
+    hitDice: { die: "d8", count: 5 }, // Бард — d8 за рівень
     // 🍀 Stone of Good Luck (attuned) — +1 to every ability check and saving throw.
     // Initiative is a DEX check, so initBonus above already includes it.
     checkBonus: 1, saveBonus: 1, bonusSource: "Stone of Good Luck",
@@ -539,6 +555,7 @@ const ALL_CHARACTERS = [
     dead: true,
     hp: 0, maxHp: 27, ac: 14, initiative: 0, spellDC: 14,
     profBonus: 2,
+    hitDice: { die: "d8", count: 4 }, // Варлок — d8 за рівень
     abilities: {STR:8,DEX:15,CON:13,INT:10,WIS:12,CHA:19},
     saveProficiencies: ["WIS","CHA"],
     skillProficiencies: {
@@ -718,6 +735,7 @@ function buildSelectionScreen() {
         <span>AC ${c.ac}</span>
         <span>КС ${c.spellDC}</span>
         <span>Init ${c.initBonus}</span>
+        ${c.hitDice ? `<span title="Кістки хітів">🎲 ${c.hitDice.count}${c.hitDice.die}</span>` : ''}
       </div>
     </div>`;
   }).join('');
@@ -731,7 +749,7 @@ function toggleSelect(id) {
 
 // ── COMBAT STATE ──────────────────────────────────────────────────────────────
 
-let S = { round:1, currentIdx:0, showForm:false, log:[], used:{}, counters:{}, prepared:{}, combatants:[], editingMonster:null, deathSaves:{}, concentration:{}, heroEffects:{}, newMonster:{ name:'', hp:'', statBlock:'', infoBlock:'' } };
+let S = { round:1, currentIdx:0, showForm:false, log:[], used:{}, counters:{}, hitDice:{}, prepared:{}, combatants:[], editingMonster:null, deathSaves:{}, concentration:{}, heroEffects:{}, newMonster:{ name:'', hp:'', statBlock:'', infoBlock:'' } };
 
 function startCombat() {
   S.combatants = ALL_CHARACTERS
@@ -787,6 +805,27 @@ function tickCounter(cid, rid, max, step) {
   S.counters[k] = S.counters[k]<=0 ? max : Math.max(0, S.counters[k]-step);
   render();
 }
+// ── HIT DICE (Кістки хітів) ───────────────────────────────────────────────────
+// Витрачаються під час короткого відпочинку (1 кістка → кидок + CON mod, мін. 1 HP).
+// Довгий відпочинок за правилами 2024 повертає ВСІ витрачені кістки (у 2014 — половину).
+function getHitDice(c) {
+  const k = 'HD_' + c.id;
+  if (S.hitDice[k] === undefined) S.hitDice[k] = c.hitDice.count;
+  return S.hitDice[k];
+}
+function clickHitDie(cid, i) {
+  const c = S.combatants.find(x => x.id === cid);
+  if (!c || !c.hitDice) return;
+  const cur = getHitDice(c);
+  // Клік по крайній доступній кістці витрачає її, по витраченій — повертає
+  const next = (cur === i + 1) ? i : i + 1;
+  S.hitDice['HD_' + cid] = next;
+  const d = next - cur;
+  if (d < 0) addLog(`${c.name}: витрачено ${Math.abs(d)}${c.hitDice.die} (лишилось ${next}/${c.hitDice.count})`);
+  else if (d > 0) addLog(`${c.name}: повернуто ${d}${c.hitDice.die} (${next}/${c.hitDice.count})`, 'lheal');
+  render();
+}
+
 function toggleRes(cid, rid) { const k=cid+'_'+rid; S.used[k]=!S.used[k]; render(); }
 function toggleHI(id) { S.used['HI_'+id]=!S.used['HI_'+id]; render(); }
 function addCond(id, val) {
@@ -905,7 +944,7 @@ function addMonster() {
 
 function resetCombat() {
   if(!confirm('Скинути бій?')) return;
-  S.round=1; S.currentIdx=0; S.used={}; S.counters={}; S.concentration={}; S.heroEffects={};
+  S.round=1; S.currentIdx=0; S.used={}; S.counters={}; S.hitDice={}; S.concentration={}; S.heroEffects={};
   S.log=["Бій скинуто."];
   S.combatants.forEach(x=>{ x.hp=x.maxHp; x.conditions=[]; });
   render();
@@ -934,6 +973,7 @@ function doShortRest() {
 
 function doLongRest() {
   const heroes = S.combatants.filter(x=>x.type==='hero');
+  const hdMsgs = [];
   heroes.forEach(c => {
     c.hp = c.maxHp;
     // reset death saves
@@ -944,10 +984,17 @@ function doLongRest() {
     S.used['HI_'+c.id] = true; // HI absent by default, earned separately
     // reset counters
     (c.counters||[]).forEach(cr => { delete S.counters[c.id+'_ctr_'+cr.id]; });
+    // Hit dice: the 2024 Long Rest returns ALL spent dice (2014 gave back half)
+    if (c.hitDice) {
+      const before = getHitDice(c);
+      S.hitDice['HD_'+c.id] = c.hitDice.count;
+      if (before < c.hitDice.count) hdMsgs.push(`${c.name} +${c.hitDice.count-before}${c.hitDice.die}`);
+    }
   });
   S.concentration = {};
   S.heroEffects = {};
   addLog('— Довгий відпочинок (Long Rest). HP та ресурси відновлено —', 'lrest');
+  if (hdMsgs.length) addLog(`🎲 Кістки хітів відновлено повністю: ${hdMsgs.join(' · ')}`, 'lrest');
   render();
 }
 
@@ -1327,8 +1374,33 @@ function renderCol3AttacksResources(c) {
     <div class="divider"></div>
     <div class="blabel">Ресурси</div>
     <div class="res-wrap">${hi}${resTags}${ctrTags}</div>
+    ${renderHitDice(c)}
     ${cdHtml}${passivesHtml}${renderMolemanBlock(c)}
   </div>`;
+}
+
+// 🎲 Кістки хітів — витрачаються на короткому відпочинку, повертаються на довгому
+function renderHitDice(c) {
+  if (!c.hitDice) return '';
+  const { die, count } = c.hitDice;
+  const left = getHitDice(c);
+  const conMod = mod(c.abilities.CON);
+  const conStr = conMod >= 0 ? '+' + conMod : String(conMod);
+  const pips = Array.from({length: count}, (_, i) => {
+    const spent = i >= left;
+    return `<span class="hd-pip ${spent?'spent':''}" onclick="clickHitDie('${c.id}',${i})"
+      title="${spent?'Клікни — повернути кістку':'Клікни — витратити кістку (' + die + ' ' + conStr + ' HP)'}">${die}</span>`;
+  }).join('');
+  return `
+    <div class="divider"></div>
+    <div class="hd-head">
+      <span class="blabel" style="margin-bottom:0">🎲 Кістки хітів</span>
+      <span class="hd-die">${count}${die}</span>
+      <span class="hd-count ${left<=0?'empty':''}">(${left}/${count})</span>
+    </div>
+    <div class="hd-pips">${pips}</div>
+    <div class="hd-note">· <b>Короткий відпочинок</b>: витрать кістку → <b>${die} ${conStr}</b> HP (мін. 1), можна по одній<br>
+    · <b>Довгий відпочинок</b> повертає <b>всі</b> витрачені кістки</div>`;
 }
 
 // 🦫 Прокляття крототропії — окремий блок у самому низу колонки атак
