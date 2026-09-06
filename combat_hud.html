@@ -228,6 +228,10 @@
   /* Hero spell effect tags */
   .heff-pos { font-size:10px; padding:2px 7px; border-radius:99px; border:.5px solid #1d9e75; color:#085041; background:#e1f5ee; cursor:pointer; user-select:none; }
   .heff-neg { font-size:10px; padding:2px 7px; border-radius:99px; border:.5px solid #c0392b; color:#7b241c; background:#fdedec; cursor:pointer; user-select:none; }
+  /* 🪙 Ефекти від предметів (Проклята монета дворфів) — золото, окремо від бафів/дебафів */
+  .heff-item { font-size:10px; padding:2px 7px; border-radius:99px; border:.5px solid #b8860b; color:#6b4e02; background:#fdf3d8; cursor:pointer; user-select:none; font-weight:500; }
+  .acbadge .ac-mod { color:#6b4e02; font-weight:500; }
+  .atk-mod-note { font-size:10px; color:#6b4e02; background:#fdf3d8; border:.5px solid #b8860b; border-radius:var(--radius); padding:2px 7px; margin-bottom:4px; display:inline-block; }
 
   /* ── MOBILE RESPONSIVE ────────────────────────────────────────── */
   @media (max-width: 700px) {
@@ -536,6 +540,13 @@ const ALL_CHARACTERS = [
       // Racial innate (1/day)
       {name:"Hellish Rebuke",     nameUa:"Пекельна Відплата",  lvl:2, tag:"racial"},
       {name:"Darkness",           nameUa:"Темрява",            lvl:2, tag:"racial", isConc:true},
+    ],
+    // 🪙 Проклята монета дворфів — підкидається на старті бою, ефект тримається весь бій
+    itemEffects: [
+      {label:"🪙 Dwarven Berserk (+2 атака, −2 AC)",   type:"item", group:"🪙 Проклята монета дворфів",
+       note:"Орел · кидок монети на старті бою · діє весь бій", atkMod:2,  acMod:-2},
+      {label:"🪙 Dwarven Stoneskin (−2 атака, +2 AC)", type:"item", group:"🪙 Проклята монета дворфів",
+       note:"Решка · кидок монети на старті бою · діє весь бій", atkMod:-2, acMod:2}
     ],
     resources: [
       {id:"hr",  label:"Hellish Rebuke (1/день)"},
@@ -1021,6 +1032,19 @@ function setConcSpell(id, val) {
   S.concentration[id].spell = val;
   render();
 }
+// Ефект може бути загальним (заклинання) або від предмета конкретного героя
+function effFor(c, label) {
+  return (c.itemEffects || []).find(e => e.label === label)
+      || HERO_SPELL_EFFECTS.find(e => e.label === label);
+}
+// Сума модифікаторів (acMod / atkMod) від усіх активних ефектів героя
+function effModTotal(c, key) {
+  return (S.heroEffects[c.id] || []).reduce((sum, label) => {
+    const e = effFor(c, label);
+    return sum + ((e && e[key]) || 0);
+  }, 0);
+}
+
 function addHeroEffect(id, val) {
   if (!val) return;
   if (!S.heroEffects[id]) S.heroEffects[id] = [];
@@ -1085,25 +1109,39 @@ function renderCol1(c) {
   // ── HERO SPELL EFFECTS ──
   const heroEffs = S.heroEffects[c.id] || [];
   const effTags = heroEffs.map((eff, i) => {
-    const effData = HERO_SPELL_EFFECTS.find(e => e.label === eff);
-    const isPos = effData && effData.type === 'positive';
-    return `<span class="${isPos ? 'heff-pos' : 'heff-neg'}" onclick="remHeroEffect('${c.id}',${i})" title="${effData ? effData.note : '— зняти'}">✕ ${eff}</span>`;
+    const effData = effFor(c, eff);
+    const cls = !effData ? 'heff-neg'
+      : effData.type === 'item' ? 'heff-item'
+      : effData.type === 'positive' ? 'heff-pos' : 'heff-neg';
+    return `<span class="${cls}" onclick="remHeroEffect('${c.id}',${i})" title="${effData ? effData.note : '— зняти'}">✕ ${eff}</span>`;
   }).join('');
   const posOpts = HERO_SPELL_EFFECTS.filter(e=>e.type==='positive').map(e=>`<option value="${e.label}" title="${e.note}">${e.label}</option>`).join('');
   const negOpts = HERO_SPELL_EFFECTS.filter(e=>e.type==='negative').map(e=>`<option value="${e.label}" title="${e.note}">${e.label}</option>`).join('');
+  // Ефекти предметів — лише в того героя, у кого предмет в інвентарі
+  const itemGroups = [...new Set((c.itemEffects||[]).map(e=>e.group))].map(g =>
+    `<optgroup label="${g}">${(c.itemEffects||[]).filter(e=>e.group===g)
+      .map(e=>`<option value="${e.label}" title="${e.note}">${e.label}</option>`).join('')}</optgroup>`
+  ).join('');
   const heroEffHtml = `<div style="margin-top:5px">
     ${effTags ? `<div class="cond-list" style="margin-bottom:3px">${effTags}</div>` : ''}
     <select class="cond-select" id="hes_${c.id}" onchange="addHeroEffect('${c.id}',this.value)">
       <option value="">+ ефект заклинання...</option>
+      ${itemGroups}
       <optgroup label="✨ Позитивні ефекти">${posOpts}</optgroup>
       <optgroup label="🔴 Негативні ефекти">${negOpts}</optgroup>
     </select>
   </div>`;
 
+  // AC з урахуванням ефектів предметів (монета дає ±2)
+  const acMod = effModTotal(c, 'acMod');
+  const acHtml = acMod
+    ? `AC ${c.ac + acMod} <span class="ac-mod" title="Базовий AC ${c.ac}, монета ${acMod>0?'+':''}${acMod}">(${c.ac} ${acMod>0?'+':'−'}${Math.abs(acMod)})</span>`
+    : `AC ${c.ac}`;
+
   return `<div>
     <div class="cname">${c.name}</div>
     <div class="csub">${c.sub}</div>
-    <div class="acbadge">AC ${c.ac} · КС ${c.spellDC||'—'}</div>
+    <div class="acbadge">${acHtml} · КС ${c.spellDC||'—'}</div>
     <div class="hp-num">${c.hp}<span style="font-size:13px;color:var(--text2)">/${c.maxHp}</span></div>
     <div class="hp-bar-bg"><div class="hp-bar-fill" style="width:${pct}%;background:${hpCol(c.hp,c.maxHp)}"></div></div>
     <div class="hp-ctrl">
@@ -1371,8 +1409,15 @@ function renderCol3AttacksResources(c) {
     <div class="blabel">Пасивні здібності</div>
     <div style="font-size:10px;color:var(--info-text);background:var(--info-bg);border:.5px solid var(--info);border-radius:var(--radius);padding:4px 7px;line-height:1.8">${c.passives.map(o=>`${o}`).join('<br>')}</div>` : '';
 
+  // Модифікатор до кидків атаки від ефектів предметів — бонуси в рядках атак не враховані
+  const atkMod = effModTotal(c, 'atkMod');
+  const atkModNote = atkMod
+    ? `<div class="atk-mod-note">🪙 ${atkMod>0?'+':'−'}${Math.abs(atkMod)} до всіх кидків атаки — додати вручну до бонусів нижче</div>`
+    : '';
+
   return `<div>
     <div class="blabel">Атаки та кантріпи</div>
+    ${atkModNote}
     ${atkRows}
     <div class="divider"></div>
     <div class="blabel">Ресурси</div>
