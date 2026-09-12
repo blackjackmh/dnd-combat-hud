@@ -339,7 +339,8 @@ const ALL_CHARACTERS = [
     profBonus: 3,
     hitDice: { die: "d10", count: 5 }, // Паладин — d10 за рівень
     moleman: true, // 🦫 Прокляття крототропії — Dragon Barrow, чари Незламнія
-    abilities: {STR:14,DEX:11,CON:11,INT:12,WIS:9,CHA:16},
+    // STR 19 — від Gauntlets of Ogre Power (attuned). Базова Сила Луффі — 14 (+2).
+    abilities: {STR:19,DEX:11,CON:11,INT:12,WIS:9,CHA:16},
     saveProficiencies: ["WIS","CHA"],
     skillProficiencies: {
       "Athletics":      {stat:"STR", type:"prof"},
@@ -348,11 +349,11 @@ const ALL_CHARACTERS = [
       "Persuasion":     {stat:"CHA", type:"prof"}
     },
     attacks: [
-      {name:"Longsword +1", bonus:"+6", dmg:"1d8+3", type:"Рубляча", note:"Versatile 1d10+3 · Mastery: Sap — влучання → ціль має Disadv. на наст. d20"},
+      {name:"Longsword +1", bonus:"+8", dmg:"1d8+5", type:"Рубляча", note:"Versatile 1d10+5 · STR 19 (рукавиці) +4, проф. +3, зброя +1 · Mastery: Sap — влучання → ціль має Disadv. на наст. d20"},
       {name:"Breath Weapon", bonus:"КС 11 DEX", dmg:"2d10", type:"Блискавка", note:"конус 15фт або лінія 30×5фт · 3/LR"},
       {name:"True Strike", bonus:"+6", dmg:"1d8+3", type:"Рад./зброї", note:"кантріп · замість STR/DEX"},
       {name:"Guiding Bolt", bonus:"+6", dmg:"4d6", type:"Радіантна", note:"120фт · Magic Initiative · влучання → наст. атака проти цілі з Adv."},
-      {name:"Javelin", bonus:"+4", dmg:"1d6+2", type:"Колюча", note:"Метальна 30/120фт · Mastery: Slow — влучання → ціль −10фт швидк."}
+      {name:"Javelin", bonus:"+7", dmg:"1d6+4", type:"Колюча", note:"Метальна 30/120фт · STR 19 (рукавиці) +4, проф. +3 · Mastery: Slow — влучання → ціль −10фт швидк."}
     ],
     // Spellcasting: Paladin prepares spells. Limit = 5 (Oath + Guiding Bolt don't count)
     spellcasting: {
@@ -406,6 +407,7 @@ const ALL_CHARACTERS = [
     ],
     cdOptions: ["Divine Sense — Celestials/Fiends/Undead в 60фт, 10хв (бонусна дія)", "Vow of Enmity — Advantage на атаки проти цілі в 30фт, 1хв (при Attack action)"],
     passives: [
+      "🥊 Gauntlets of Ogre Power — Сила 19 (базова 14) · attuned · враховано в атаках, Атлетиці та формі кротолюдини",
       "🛡 Spellguard Shield — Advantage на всі saving throws проти заклинань та магічних ефектів · spell attack rolls мають Disadvantage проти тебе",
       "⚔ Extra Attack — 2 атаки при Attack action",
       "🐴 Faithful Steed — Find Steed завжди підготовлений · Misty Step (oath) при падінні з коня"
