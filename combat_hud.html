@@ -497,10 +497,10 @@ const ALL_CHARACTERS = [
     ]
   },
   {
-    id: "adolf", name: "Адольф", sub: "Бард 5 (CoS)", initBonus: "DEX +4 🍀",
-    hp: 38, maxHp: 38, ac: 15, initiative: 0, spellDC: 15,
+    id: "adolf", name: "Адольф", sub: "Бард 6 (CoS)", initBonus: "DEX +4 🍀",
+    hp: 42, maxHp: 42, ac: 15, initiative: 0, spellDC: 15,
     profBonus: 3, jackOfAllTrades: true,
-    hitDice: { die: "d8", count: 5 }, // Бард — d8 за рівень
+    hitDice: { die: "d8", count: 6 }, // Бард — d8 за рівень
     // 🍀 Stone of Good Luck (attuned) — +1 to every ability check and saving throw.
     // Initiative is a DEX check, so initBonus above already includes it.
     checkBonus: 1, saveBonus: 1, bonusSource: "Stone of Good Luck",
@@ -515,7 +515,7 @@ const ALL_CHARACTERS = [
       "Stealth":        {stat:"DEX", type:"prof"}
     },
     attacks: [
-      {name:"Rapier (Dueling)", bonus:"+5", dmg:"1d8+5", type:"Колюча", note:"DEX+3 + Dueling+2"},
+      {name:"Rapier (Dueling) ×2", bonus:"+5", dmg:"1d8+5", type:"Колюча", note:"DEX+3 + Dueling+2 · Extra Attack — дві атаки за Attack action"},
       {name:"Rapier + Def. Flourish", bonus:"+5", dmg:"1d8+1d6+5", type:"Колюча", note:"Bardic Insp: +1d6 шкоди + +1d6 AC до наст. ходу"},
       {name:"Rapier + Slash. Flourish", bonus:"+5", dmg:"1d8+1d6+5", type:"Колюча", note:"Bardic Insp: +1d6 цілі + та ж 1d6 ін. істоті в 5фт"},
       {name:"Rapier + Mob. Flourish", bonus:"+5", dmg:"1d8+1d6+5", type:"Колюча", note:"Bardic Insp: +1d6 + відкинути 5d6фт + рух до неї"},
@@ -546,6 +546,12 @@ const ALL_CHARACTERS = [
       {name:"Hellish Rebuke",     nameUa:"Пекельна Відплата",  lvl:2, tag:"racial"},
       {name:"Darkness",           nameUa:"Темрява",            lvl:2, tag:"racial", isConc:true},
     ],
+    passives: [
+      "⚔ Extra Attack (рів. 6, College of Swords) — 2 атаки при Attack action",
+      "🗡 Blade Flourish — лише ОДИН прийом за хід, навіть із двома атаками · +10фт швидкості у хід атаки",
+      "🎭 Font of Inspiration — Bardic Inspiration відновлюється після Short Rest · або чарунка → 1 кубик без дії",
+      "🍀 Stone of Good Luck — +1 до всіх перевірок і рятівних кидків (attuned)"
+    ],
     // 🪙 Проклята монета дворфів — підкидається на старті бою, ефект тримається весь бій
     itemEffects: [
       {label:"🪙 Dwarven Berserk (+2 атака, −2 AC)",   type:"item", group:"🪙 Проклята монета дворфів",
@@ -562,7 +568,7 @@ const ALL_CHARACTERS = [
     counters: [
       {id:"slot1", label:"Slot 1 (1рів)",   max:4, step:1},
       {id:"slot2", label:"Slot 2 (2рів)",   max:3, step:1},
-      {id:"slot3", label:"Slot 3 (3рів)",   max:2, step:1},
+      {id:"slot3", label:"Slot 3 (3рів)",   max:3, step:1},
       {id:"bi",    label:"Bardic Insp. d8", max:4, step:1}
     ]
   },
