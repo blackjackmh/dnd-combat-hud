@@ -127,7 +127,7 @@
 
 | Предмет | К-сть | Рідкісність | Тип |
 |---------|-------|-------------|-----|
-| ~~Potion of Healing~~ | **×0** | Common | Consumable |
+| **Potion of Healing** | **×2** | Common | Consumable |
 | Deadly Poison | ×1 | Common | Consumable |
 | Potion of Barkskin | ×1 | Uncommon | Consumable |
 | Potion of Hill Giant Strength | ×1 | Uncommon | Consumable |
@@ -135,7 +135,7 @@
 | Potion of Invulnerability | ×1 | Rare | Consumable |
 | Насіння магічного гарбуза | ×30 | Uncommon | Consumable |
 
-> ⚠️ **Зілля лікування скінчилися** — обидва витрачено в Аксхольмі. Найближче джерело: Адабра Гвін на Umbrage Hill, 50 зм за флакон.
+> 🧪 **Potion of Healing (2d4+2 HP, Бонусна дія)** — обидва запаси витрачено в Аксхольмі, але по дорозі до Icespire Hold загін знайшов **два нових** у мішку троля. Докупити можна в Адабри Гвін на Umbrage Hill, 50 зм за флакон.
 
 ### Магічні предмети
 
