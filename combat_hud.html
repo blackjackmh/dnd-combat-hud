@@ -334,13 +334,15 @@
 
 const ALL_CHARACTERS = [
   {
-    id: "luffi", name: "Луффі", sub: "Паладин 5", initBonus: "DEX +0",
-    hp: 31, maxHp: 31, ac: 19, initiative: 0, spellDC: 14,
+    id: "luffi", name: "Луффі", sub: "Паладин 6", initBonus: "DEX +0",
+    hp: 37, maxHp: 37, ac: 19, initiative: 0, spellDC: 14,
     profBonus: 3,
-    hitDice: { die: "d10", count: 5 }, // Паладин — d10 за рівень
+    hitDice: { die: "d10", count: 6 }, // Паладин — d10 за рівень
     moleman: true, // 🦫 Прокляття крототропії — Dragon Barrow, чари Незламнія
     // STR 19 — від Gauntlets of Ogre Power (attuned). Базова Сила Луффі — 14 (+2).
     abilities: {STR:19,DEX:11,CON:11,INT:12,WIS:9,CHA:16},
+    // 🌟 Aura of Protection (рів. 6) — +CHA до всіх рятівних кидків, завжди на собі
+    saveBonus: 3, bonusSource: "Aura of Protection",
     saveProficiencies: ["WIS","CHA"],
     skillProficiencies: {
       "Athletics":      {stat:"STR", type:"prof"},
@@ -407,6 +409,7 @@ const ALL_CHARACTERS = [
     ],
     cdOptions: ["Divine Sense — Celestials/Fiends/Undead в 60фт, 10хв (бонусна дія)", "Vow of Enmity — Advantage на атаки проти цілі в 30фт, 1хв (при Attack action)"],
     passives: [
+      "🌟 Aura of Protection (рів. 6) — Луффі та союзники в 10фт: +3 до ВСІХ рятівних кидків · постійно, без дії · вимикається при Incapacitated",
       "🥊 Gauntlets of Ogre Power — Сила 19 (базова 14) · attuned · враховано в атаках, Атлетиці та формі кротолюдини",
       "🛡 Spellguard Shield — Advantage на всі saving throws проти заклинань та магічних ефектів · spell attack rolls мають Disadvantage проти тебе",
       "⚔ Extra Attack — 2 атаки при Attack action",
@@ -419,7 +422,7 @@ const ALL_CHARACTERS = [
       {id:"slot2", label:"Slot 2 (2рів)", max:2, step:1},
       {id:"cd",    label:"Channel Div.",  max:2, step:1},
       {id:"br",    label:"Breath Wpn",    max:3, step:1},
-      {id:"loh",   label:"Lay on Hands",  max:25, step:1},
+      {id:"loh",   label:"Lay on Hands",  max:30, step:1},
       {id:"flight",label:"Draconic Flight",max:1, step:1}
     ]
   },
@@ -674,6 +677,7 @@ const SPELL_EFFECTS = [
 
 const HERO_SPELL_EFFECTS = [
   // Позитивні ефекти (бафи на персонажа)
+  { label:"🌟 В аурі Луффі (+3 saves)",           type:"positive", note:"Aura of Protection · поки союзник у 10фт від Луффі · не потребує дії" },
   { label:"Bless (+1d4 атаки/saves)",            type:"positive", note:"Conc. 1хв" },
   { label:"Shield of Faith (+2 AC)",              type:"positive", note:"Conc. 10хв · BA" },
   { label:"Heroism (Immune Fear, +CHA HP/хід)",   type:"positive", note:"Conc. 1хв · BA" },
@@ -1216,7 +1220,10 @@ function renderCol2Abilities(c) {
   return `<div>
     <div class="blabel">Характеристики та навички</div>
     ${c.jackOfAllTrades ? `<div style="font-size:9px;color:#7a6a00;margin-bottom:4px">🟡 = Jack of All Trades (+${Math.floor((c.profBonus||2)/2)} до непроф. навичок)</div>` : ''}
-    ${(checkBonus || saveBonus) ? `<div style="font-size:9px;color:#1d7a5e;margin-bottom:4px">🍀 ${c.bonusSource||'Предмет'}: +${checkBonus} до всіх перевірок характеристик (враховано в навичках та ініціативі), +${saveBonus} до всіх рятівних кидків</div>` : ''}
+    ${(checkBonus || saveBonus) ? `<div style="font-size:9px;color:#1d7a5e;margin-bottom:4px">🍀 ${c.bonusSource||'Предмет'}: ${[
+      checkBonus ? `+${checkBonus} до всіх перевірок характеристик (враховано в навичках та ініціативі)` : '',
+      saveBonus ? `+${saveBonus} до всіх рятівних кидків` : ''
+    ].filter(Boolean).join(', ')}</div>` : ''}
     <div class="ability-grid">${rows}</div>
     ${saveHtml ? `<div style="margin-top:6px"><div class="blabel">Рятівні кидки <span style="font-weight:400;text-transform:none;letter-spacing:0">(● = майстерність)</span></div><div class="save-prof">${saveHtml}</div></div>` : ''}
   </div>`;
