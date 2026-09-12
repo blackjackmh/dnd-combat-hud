@@ -548,6 +548,7 @@ const ALL_CHARACTERS = [
       {name:"Darkness",           nameUa:"Темрява",            lvl:2, tag:"racial", isConc:true},
     ],
     passives: [
+      "🪖 Dread Helm — Tracking Beam (бонусна дія, 1/короткий відпочинок): промінь фіксує ціль у 60фт до кінця твого ходу · наступна атака по ній (твоя або найближчого союзника) — з Перевагою, і ціль не має напівукриття · далі ефект скидається",
       "⚔ Extra Attack (рів. 6, College of Swords) — 2 атаки при Attack action",
       "🗡 Blade Flourish — лише ОДИН прийом за хід, навіть із двома атаками · +10фт швидкості у хід атаки",
       "🎭 Font of Inspiration — Bardic Inspiration відновлюється після Short Rest · або чарунка → 1 кубик без дії",
@@ -564,13 +565,14 @@ const ALL_CHARACTERS = [
       {id:"hr",  label:"Hellish Rebuke (1/день)"},
       {id:"dark",label:"Darkness (1/день)"}
     ],
-    shortRestRestores: { resources:[], counters:[{id:"bi", amount:4}] },
+    shortRestRestores: { resources:[], counters:[{id:"bi", amount:4}, {id:"beam", amount:1}] },
     longRestRestores: "all",
     counters: [
       {id:"slot1", label:"Slot 1 (1рів)",   max:4, step:1},
       {id:"slot2", label:"Slot 2 (2рів)",   max:3, step:1},
       {id:"slot3", label:"Slot 3 (3рів)",   max:3, step:1},
-      {id:"bi",    label:"Bardic Insp. d8", max:4, step:1}
+      {id:"bi",    label:"Bardic Insp. d8", max:4, step:1},
+      {id:"beam",  label:"🪖 Tracking Beam", max:1, step:1}
     ]
   },
   {
