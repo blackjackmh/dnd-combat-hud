@@ -159,6 +159,7 @@
 | Heroic Inspiration | **1** | Long Rest (автоматично через Resourceful) |
 | Luck Points | **3** | Long Rest |
 | Sending Stones | **1 раз / обидва** | Наступний світанок |
+| Spell Scroll: Fireball | **1** (8d6 вогняної, DEX DC 15) | Не відновлюється — одноразовий |
 
 ---
 
